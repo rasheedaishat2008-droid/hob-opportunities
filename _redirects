@@ -1,0 +1,3 @@
+/opportunity/:slug /opportunity/?slug=:slug 200
+/opportunity/:slug/ /opportunity/?slug=:slug 200
+/opportunities/:id /opportunity/?id=:id 302
