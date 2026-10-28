@@ -199,3 +199,14 @@ h1, h2, .hero h1, .page-hero h1, .ocean-page-hero h1, .detail-hero h1,
   display: block;
 }
 /* End design fixes */
+@media (max-width: 700px) {
+  .ocean-photo,
+  .op-card-photo,
+  .detail-hero .ocean-photo,
+  .story-photo,
+  .service-photo {
+    background-image: none !important;
+    background: linear-gradient(135deg, #0d2436, #0a7a86) !important;
+  }
+  .hero-visual { display: none !important; }
+}
