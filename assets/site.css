@@ -210,3 +210,26 @@ h1, h2, .hero h1, .page-hero h1, .ocean-page-hero h1, .detail-hero h1,
   }
   .hero-visual { display: none !important; }
 }
+
+@media (max-width: 700px) {
+  .searchbar {
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+  }
+  .searchbar input {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px; /* stops iPhone zoom */
+  }
+  .searchbar .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+  .hero h1 {
+    font-size: clamp(1.75rem, 7vw, 2.25rem);
+  }
+  .hero p {
+    font-size: 1rem;
+  }
+}
