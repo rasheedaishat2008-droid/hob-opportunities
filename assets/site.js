@@ -89,35 +89,56 @@
   function detailUrl(r) { const s=slug(r); return s?`/opportunity/${encodeURIComponent(s)}/`:`/opportunity/?id=${encodeURIComponent(recordId(r))}`; }
 
   // ---- Ocean images: stable per record, but never repeated among nearby cards ----
-  // How many .scene-N images exist in launch.css (scene-0 ... scene-9 = 10).
-  // If you add more images, raise this number to match.
-  const SCENE_COUNT = 10;
-  // How many previous cards to avoid. 5 covers the card to the left plus the
-  // whole row above in a 3-column grid (and works for 2 columns too).
-  const SCENE_WINDOW = 5;
-  let recentScenes = [];
-  function resetScenes() { recentScenes = []; }
+ // ---- Ocean images: stable per record, maximally unique within a list ----
+const SCENE_COUNT = 10;          // must match the number of .scene-N rules
+const SCENE_WINDOW = 6;          // 3-col grid + a little extra safety
 
-  function imageIndex(record) {
-    const key = recordId(record) || field(record, API_FIELDS.title) || 'hob';
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) hash = (hash * 33 + key.charCodeAt(i)) | 0;
-    const start = Math.abs(hash) % SCENE_COUNT;      // each record's preferred image
-    const nearby = recentScenes.slice(-SCENE_WINDOW);
-    let n = start;
-    for (let step = 0; step < SCENE_COUNT; step++) { // first free image from there
-      const candidate = (start + step) % SCENE_COUNT;
-      if (!nearby.includes(candidate)) { n = candidate; break; }
+let recentScenes = [];
+
+function resetScenes() {
+  recentScenes = [];
+}
+
+function imageIndex(record) {
+  const key = recordId(record) || field(record, API_FIELDS.title) || 'hob';
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 33 + key.charCodeAt(i)) | 0;
+  }
+  const preferred = Math.abs(hash) % SCENE_COUNT;
+
+  const nearby = recentScenes.slice(-SCENE_WINDOW);
+  const used = new Set(recentScenes);
+
+  // 1. Prefer an unused scene, starting from the preferred one
+  for (let step = 0; step < SCENE_COUNT; step++) {
+    const candidate = (preferred + step) % SCENE_COUNT;
+    if (!used.has(candidate) && !nearby.includes(candidate)) {
+      recentScenes.push(candidate);
+      return candidate;
     }
-    recentScenes.push(n);
-    return n;
   }
 
-  function scene(record, extra) {
-    const n = imageIndex(record);
-    const alt = `${field(record, API_FIELDS.title) || 'Ocean and opportunity'} — ocean-inspired HOB artwork`;
-    return `<div class="ocean-photo scene-${n}${extra ? ` ${extra}` : ''}" role="img" aria-label="${escapeHtml(alt)}"></div>`;
+  // 2. Fall back to anything not in the recent window
+  for (let step = 0; step < SCENE_COUNT; step++) {
+    const candidate = (preferred + step) % SCENE_COUNT;
+    if (!nearby.includes(candidate)) {
+      recentScenes.push(candidate);
+      return candidate;
+    }
   }
+
+  // 3. Absolute fallback
+  recentScenes.push(preferred);
+  return preferred;
+}
+
+function scene(record, extra) {
+  const n = imageIndex(record);
+  const alt = `${field(record, API_FIELDS.title) || 'Ocean and opportunity'} — ocean-inspired HOB artwork`;
+  return `<div class="ocean-photo scene-${n}${extra ? ` ${extra}` : ''}" role="img" aria-label="${escapeHtml(alt)}"></div>`;
+}
+// ---- end image block ----
   // ---- end image block ----
 
   function savedIds() { try { return JSON.parse(localStorage.getItem('hobSavedOpportunities') || '[]'); } catch (_) { return []; } }
