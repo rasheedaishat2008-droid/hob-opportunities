@@ -87,24 +87,39 @@
     return field(r,API_FIELDS.title).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   }
   function detailUrl(r) { const s=slug(r); return s?`/opportunity/${encodeURIComponent(s)}/`:`/opportunity/?id=${encodeURIComponent(recordId(r))}`; }
+
+  // ---- Ocean images: stable per record, but never repeated among nearby cards ----
+  // How many .scene-N images exist in launch.css (scene-0 ... scene-9 = 10).
+  // If you add more images, raise this number to match.
+  const SCENE_COUNT = 10;
+  // How many previous cards to avoid. 5 covers the card to the left plus the
+  // whole row above in a 3-column grid (and works for 2 columns too).
+  const SCENE_WINDOW = 5;
+  let recentScenes = [];
+  function resetScenes() { recentScenes = []; }
+
   function imageIndex(record) {
-    const c = categoryLabel(field(record, API_FIELDS.cat)).toLowerCase();
-    let pool = [0,1,2,3,4,5,6,7,8,9];
-    if (c.includes('scholar')) pool = [1,5,6,0];
-    else if (c.includes('grant')) pool = [3,7,9,4];
-    else if (c.includes('fellow')) pool = [2,6,8,1];
-    else if (c.includes('intern')) pool = [2,6,1,8];
-    else if (c.includes('blue job') || c === 'jobs') pool = [4,2,6,8];
-    else if (c.includes('undergraduate')) pool = [1,5,6,2];
     const key = recordId(record) || field(record, API_FIELDS.title) || 'hob';
-    let hash = 0; for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0;
-    return pool[Math.abs(hash) % pool.length];
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) hash = (hash * 33 + key.charCodeAt(i)) | 0;
+    const start = Math.abs(hash) % SCENE_COUNT;      // each record's preferred image
+    const nearby = recentScenes.slice(-SCENE_WINDOW);
+    let n = start;
+    for (let step = 0; step < SCENE_COUNT; step++) { // first free image from there
+      const candidate = (start + step) % SCENE_COUNT;
+      if (!nearby.includes(candidate)) { n = candidate; break; }
+    }
+    recentScenes.push(n);
+    return n;
   }
+
   function scene(record, extra) {
     const n = imageIndex(record);
     const alt = `${field(record, API_FIELDS.title) || 'Ocean and opportunity'} — ocean-inspired HOB artwork`;
     return `<div class="ocean-photo scene-${n}${extra ? ` ${extra}` : ''}" role="img" aria-label="${escapeHtml(alt)}"></div>`;
   }
+  // ---- end image block ----
+
   function savedIds() { try { return JSON.parse(localStorage.getItem('hobSavedOpportunities') || '[]'); } catch (_) { return []; } }
   function toggleSaved(id) {
     const current = savedIds(); const next = current.includes(id) ? current.filter((x) => x !== id) : current.concat(id);
@@ -145,6 +160,7 @@
   }
   function draw(target, rows, empty) {
     if (!target) return;
+    resetScenes();
     target.innerHTML = rows.length ? rows.map(card).join('') : `<div class="empty">${escapeHtml(empty || 'No published opportunities are available yet.')}</div>`;
     bindSaves(target);
   }
@@ -177,6 +193,7 @@
     const guideOnly = !publicFields(record);
     const applyLabel = apply && apply.toLowerCase().startsWith('mailto:') ? 'Email to apply ↗' : 'Apply on official website ↗';
     const source = official ? `<a class="source-link" href="${escapeHtml(official)}" target="_blank" rel="noopener noreferrer">Official opportunity page ↗</a>` : '';
+    resetScenes();
     root.innerHTML = `<div class="detail-shell"><div class="detail-breadcrumb"><a href="/opportunities/">Opportunities</a><span>›</span><span>${escapeHtml(category)}</span></div><section class="detail-hero">${scene(record,'detail-photo')}<div class="detail-hero-shade"></div><div class="detail-hero-copy"><span class="tag">${escapeHtml(category)}</span><h1>${escapeHtml(title)}</h1><p class="provider">${escapeHtml(field(record,API_FIELDS.org))}</p>${summary?`<p class="detail-summary">${escapeHtml(summary)}</p>`:''}<div class="detail-chips"><span>◷ ${escapeHtml(deadline)}</span><span>✦ HOB opportunity</span></div><div class="detail-hero-actions">${apply?`<a class="btn apply-btn" href="${escapeHtml(apply)}" target="_blank" rel="noopener noreferrer">${applyLabel}</a>`:'<span class="btn apply-btn is-disabled" aria-disabled="true">Application link unavailable</span>'}<button class="save-btn detail-save ${savedIds().includes(recordId(record))?'saved':''}" data-save="${escapeHtml(recordId(record))}">${savedIds().includes(recordId(record))?'♥ Saved':'♡ Save'}</button></div></div></section><div class="journey" aria-label="Application journey"><div class="journey-step current"><i>01</i><span>Explore</span></div><span class="journey-line"></span><div class="journey-step"><i>02</i><span>Prepare</span></div><span class="journey-line"></span><div class="journey-step"><i>03</i><span>Apply</span></div></div><div class="detail-columns"><article class="detail-main">${publicFields(record)||'<div class="empty">More information is available on the official opportunity page.</div>'}</article><aside class="detail-side"><div class="verified-label"><span>✓</span><div><strong>Opportunity details</strong><small>Always confirm the latest criteria with the provider.</small></div></div><div class="side-fact"><span>Category</span><strong>${escapeHtml(category)}</strong></div>${apply?`<a class="btn apply-btn side-apply" href="${escapeHtml(apply)}" target="_blank" rel="noopener noreferrer">${applyLabel}</a>`:''}${source}</aside></div></div>`;
     document.title = `${title} | HOB Opportunities`;
     const canonical=$('link[rel="canonical"]'); if(canonical)canonical.href=`${cfg.DOMAIN||location.origin}${detailUrl(record)}`;
@@ -212,11 +229,13 @@
   }
   function renderStories() {
     const target=$('#storiesCards'); if(!target)return;
+    resetScenes();
     target.innerHTML=state.stories.length?state.stories.map(storyCard).join(''):`<div class="empty"><strong>Success stories are coming soon.</strong><br>When published by HOB, they will appear here.</div>`;
   }
   function serviceTitle(r) { return field(r,['Title','Service Name','Name','Service']) || 'HOB service'; }
   function renderServices() {
     const target=$('#servicesCards'); if(!target)return;
+    resetScenes();
     if(state.errors.services){target.innerHTML='<div class="empty"><strong>Services could not be loaded.</strong><br>Check the deployed Apps Script feed and the Services sheet tab.</div>';return;}
     target.innerHTML=state.services.length?state.services.map((r)=>{
       const desc=field(r,['Description','Summary','Details','Service Description','Content']); const url=safeUrl(field(r,['URL','Link','Service URL','Website']));
@@ -323,5 +342,3 @@
   }
   document.addEventListener('DOMContentLoaded',init);
 })();
-
-
