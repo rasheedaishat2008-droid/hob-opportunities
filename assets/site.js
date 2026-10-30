@@ -152,11 +152,9 @@
       hash = (hash * 33 + key.charCodeAt(i)) | 0;
     }
     const preferred = Math.abs(hash) % SCENE_COUNT;
-
     const nearby = recentScenes.slice(-SCENE_WINDOW);
     const used = new Set(recentScenes);
 
-    // Prefer unused scenes first
     for (let step = 0; step < SCENE_COUNT; step++) {
       const candidate = (preferred + step) % SCENE_COUNT;
       if (!used.has(candidate) && !nearby.includes(candidate)) {
@@ -165,7 +163,6 @@
       }
     }
 
-    // Then anything not in the recent window
     for (let step = 0; step < SCENE_COUNT; step++) {
       const candidate = (preferred + step) % SCENE_COUNT;
       if (!nearby.includes(candidate)) {
@@ -184,12 +181,10 @@
     const imageUrl = safeUrl(field(record, API_FIELDS.image));
     const extraClass = extra ? ` ${extra}` : '';
 
-    // Real image from the sheet
     if (imageUrl) {
       return `<img class="op-photo${extraClass}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">`;
     }
 
-    // Fallback to ocean sprite
     const n = imageIndex(record);
     return `<div class="ocean-photo scene-${n}${extraClass}" role="img" aria-label="${escapeHtml(alt)}"></div>`;
   }
@@ -485,7 +480,7 @@
     return field(r, ['Title', 'Service Name', 'Name', 'Service']) || 'HOB service';
   }
 
-   function renderServices() {
+  function renderServices() {
     const target = $('#servicesCards');
     if (!target) return;
     resetScenes();
@@ -495,27 +490,12 @@
       return;
     }
 
-    target.innerHTML = state.services.lengt ? state.services.map((r) => {
-          const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
-          const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
-          return `<article class="service-card">
-            ${scene(r, 'service-photo')}
-            <div class="service-copy">
-              <span class="tag">Hands on Blue</span>
-              <h2>${escapeHtml(serviceTitle(r))}</h2>
-              <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
-              ${url ? `<a class="text-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Learn more ↗</a>` : ''}
-            </div>
-          </article>`;
-        }).join('')
-      : '<div class="empty">No active services are listed yet.</div>';
-  }
     target.innerHTML = state.services.length
       ? state.services.map((r) => {
           const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
           const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
           return `<article class="service-card">
-            ${scene({ ID: serviceTitle(r), Title: serviceTitle(r) }, 'service-photo')}
+            ${scene(r, 'service-photo')}
             <div class="service-copy">
               <span class="tag">Hands on Blue</span>
               <h2>${escapeHtml(serviceTitle(r))}</h2>
@@ -837,9 +817,3 @@
       } catch (e) {
         state.errors.services = e.message;
       }
-      renderServices();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
-})();
