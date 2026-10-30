@@ -479,7 +479,7 @@
     return field(r, ['Title', 'Service Name', 'Name', 'Service']) || 'HOB service';
   }
 
-  function renderServices() {
+    function renderServices() {
     const target = $('#servicesCards');
     if (!target) return;
     resetScenes();
@@ -489,21 +489,43 @@
       return;
     }
 
-    target.innerHTML = state.services.length
-      ? state.services.map((r) => {
-          const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
-          const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
-          return `<article class="service-card">
-            ${scene(r, 'service-photo')}
+    if (!state.services.length) {
+      target.innerHTML = '<div class="empty">No active services are listed yet.</div>';
+      return;
+    }
+
+    target.innerHTML = state.services.map((r) => {
+      const title = serviceTitle(r);
+      const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
+      const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
+      const photo = scene(r, 'service-photo');
+
+      // Whole card becomes clickable if a URL exists
+      if (url) {
+        return `
+          <a href="${escapeHtml(url)}" class="service-card service-card-link" target="_blank" rel="noopener noreferrer">
+            ${photo}
             <div class="service-copy">
               <span class="tag">Hands on Blue</span>
-              <h2>${escapeHtml(serviceTitle(r))}</h2>
+              <h2>${escapeHtml(title)}</h2>
               <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
-              ${url ? `<a class="text-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Learn more ↗</a>` : ''}
+              <span class="text-link">Learn more <span aria-hidden="true">↗</span></span>
             </div>
-          </article>`;
-        }).join('')
-      : '<div class="empty">No active services are listed yet.</div>';
+          </a>`;
+      }
+
+      // No URL – show card without link
+      return `
+        <article class="service-card">
+          ${photo}
+          <div class="service-copy">
+            <span class="tag">Hands on Blue</span>
+            <h2>${escapeHtml(title)}</h2>
+            <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
+            <span class="text-link is-disabled">Link coming soon</span>
+          </div>
+        </article>`;
+    }).join('');
   }
 
   function minuteTitle(r) {
