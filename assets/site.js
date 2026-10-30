@@ -486,14 +486,31 @@
   }
 
   function renderServices() {
-    const target = $('#servicesCards');
-    if (!target) return;
-    resetScenes();
+  const target = $('#servicesCards');
+  if (!target) return;
+  resetScenes();
 
-    if (state.errors.services) {
-      target.innerHTML = '<div class="empty"><strong>Services could not be loaded.</strong><br>Check the deployed Apps Script feed and the Services sheet tab.</div>';
-      return;
-    }
+  if (state.errors.services) {
+    target.innerHTML = '<div class="empty"><strong>Services could not be loaded.</strong><br>Check the deployed Apps Script feed and the Services sheet tab.</div>';
+    return;
+  }
+
+  target.innerHTML = state.services.length
+    ? state.services.map((r) => {
+        const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
+        const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
+        return `<article class="service-card">
+          ${scene(r, 'service-photo')}
+          <div class="service-copy">
+            <span class="tag">Hands on Blue</span>
+            <h2>${escapeHtml(serviceTitle(r))}</h2>
+            <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
+            ${url ? `<a class="text-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Learn more ↗</a>` : ''}
+          </div>
+        </article>`;
+      }).join('')
+    : '<div class="empty">No active services are listed yet.</div>';
+}
 
     target.innerHTML = state.services.length
       ? state.services.map((r) => {
