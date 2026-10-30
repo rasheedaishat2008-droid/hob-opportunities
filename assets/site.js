@@ -817,3 +817,9 @@
       } catch (e) {
         state.errors.services = e.message;
       }
+      renderServices();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
