@@ -299,7 +299,7 @@
       .join('') + guideExtra;
   }
 
-  function renderDetail() {
+    function renderDetail() {
     const root = $('#detailRoot');
     if (!root) return;
 
@@ -386,7 +386,6 @@
               <span>Category</span>
               <strong>${escapeHtml(category)}</strong>
             </div>
-            ${apply ? `<a class="btn apply-btn side-apply" href="${escapeHtml(apply)}" target="_blank" rel="noopener noreferrer">${applyLabel}</a>` : ''}
             ${source}
           </aside>
         </div>
