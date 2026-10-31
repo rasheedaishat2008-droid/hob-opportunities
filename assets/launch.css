@@ -306,6 +306,40 @@
   text-decoration: none;
 }
 
+  .verified-label {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.verified-label > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dff7ea;
+  color: #168253;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.verified-label strong {
+  display: block;
+  font-size: 14.5px;
+  color: #062c42;
+  margin-bottom: 3px;
+}
+
+.verified-label small {
+  display: block;
+  color: #5a707b;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
 .empty a:hover {
   text-decoration: underline;
 }
