@@ -911,6 +911,7 @@ function setCopy(i) {
   }
 
   async function init() {
+   document.body.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
    setupNav(); 
    setupFooter(); 
    setupBlueMinuteDialog(); 
