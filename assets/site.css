@@ -272,3 +272,15 @@ h1, h2, .hero h1, .page-hero h1, .ocean-page-hero h1, .detail-hero h1,
   .hero.hero--slider:before { background-image: linear-gradient(rgba(3,29,48,.9), rgba(5,42,64,.82)); }
 }
 @media (prefers-reduced-motion: reduce) { .hero-track { transition: none; } }
+
+[data-page="contact"] .page-hero::before {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://media.istockphoto.com/id/2231439917/photo/a-beautiful-aquarium-fish-nature-background.webp?a=1&b=1&s=612x612&w=0&k=20&c=hWOWPtcL77OddPm1guXDjoL7j62kwDW0lN08sGEKgO4=') !important;
+}
+[data-page="contact"] .page-hero .wrap {
+  position: relative;
+  z-index: 1;
+}
