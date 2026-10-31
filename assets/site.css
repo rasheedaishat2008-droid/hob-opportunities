@@ -229,7 +229,13 @@ h1, h2, .hero h1, .page-hero h1, .ocean-page-hero h1, .detail-hero h1,
   .hero h1 {
     font-size: clamp(1.75rem, 7vw, 2.25rem);
   }
-  .hero p {
-    font-size: 1rem;
+
+  .hero.hero:before {
+  background-image:
+    linear-gradient(90deg, rgba(3,29,48,.95) 0%, rgba(5,42,64,.85) 46%, rgba(3,36,60,.35) 100%),
+    url('https://images.unsplash.com/photo-1779122626135-5efe7112ad24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: auto, cover;
+  background-position: center, center;
+}
   }
 }
