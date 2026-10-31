@@ -252,3 +252,23 @@ h1, h2, .hero h1, .page-hero h1, .ocean-page-hero h1, .detail-hero h1,
       url('https://images.unsplash.com/photo-1779122626135-5efe7112ad24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
   }
 }
+
+/* ===== Homepage hero slider ===== */
+.hero.hero--slider:before {            /* keep only the dark overlay; the photos are now the slides */
+  background-image: linear-gradient(90deg, rgba(3,29,48,.95) 0%, rgba(5,42,64,.85) 46%, rgba(3,36,60,.35) 100%);
+  background-size: auto;
+  z-index: 1;
+}
+.hero.hero--slider > .wrap { z-index: 2; }
+.hero-slides { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.hero-track { display: flex; height: 100%; transition: transform .9s cubic-bezier(.65,0,.35,1); will-change: transform; }
+.hero-slide { flex: 0 0 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.hero-dots { position: absolute; left: 0; right: 0; bottom: 16px; z-index: 3; display: flex; justify-content: center; gap: 10px; }
+.hero-dot { width: 10px; height: 10px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.45); cursor: pointer; transition: width .25s ease, background .25s ease; }
+.hero-dot:hover { background: rgba(255,255,255,.8); }
+.hero-dot.is-active { width: 28px; background: #fff; }
+.hero-dot:focus-visible { outline: 2px solid #16b6d4; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .hero.hero--slider:before { background-image: linear-gradient(rgba(3,29,48,.9), rgba(5,42,64,.82)); }
+}
+@media (prefers-reduced-motion: reduce) { .hero-track { transition: none; } }
