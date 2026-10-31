@@ -378,3 +378,5 @@
 
    .hero-copy { transition: opacity .3s ease, transform .3s ease; }
    .hero-copy-out { opacity: 0; transform: translateY(8px); }
+
+.hero .hero-grid { grid-template-columns: 1fr; }
