@@ -780,12 +780,93 @@
     });
   }
 
+    // ---- Homepage hero slider: photos slide across behind the headline; dots jump to a slide ----
+  // Add more wide photos to this list (at least 1920px across; for Unsplash links use w=1920).
+  // With only one image the hero stays static, exactly as it is now.
+    const HERO_IMAGES = [
+    'https://images.unsplash.com/photo-1779122626135-5efe7112ad24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
+    'https://plus.unsplash.com/premium_photo-1693723595870-2b8bad09b4c2?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
+    'https://plus.unsplash.com/premium_photo-1661841437632-6cfb212f0f24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D'
+  ];
+  function setupHeroSlider() {
+    const hero = $('.hero');
+    const urls = HERO_IMAGES.map(imageUrl).filter(Boolean);
+    if (!hero || urls.length < 2) return;
+    const n = urls.length, delay = 6000;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    hero.classList.add('hero--slider');
+
+    const view = document.createElement('div'); view.className = 'hero-slides'; view.setAttribute('aria-hidden', 'true');
+    const track = document.createElement('div'); track.className = 'hero-track';
+    urls.concat(urls[0]).forEach((u) => {            // the extra copy of slide 1 makes the loop seamless
+      const s = document.createElement('div'); s.className = 'hero-slide';
+      s.style.backgroundImage = `url('${cssUrl(u)}')`; track.appendChild(s);
+    });
+    view.appendChild(track); hero.insertBefore(view, hero.firstChild);
+
+    const dots = document.createElement('div'); dots.className = 'hero-dots';
+    dots.setAttribute('role', 'group'); dots.setAttribute('aria-label', 'Hero image slides');
+    const buttons = urls.map((_, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'hero-dot';
+      b.setAttribute('aria-label', `Show image ${i + 1} of ${n}`);
+      b.addEventListener('click', () => { if (!busy) { go(i); restart(); } });
+      dots.appendChild(b); return b;
+    });
+    hero.appendChild(dots);
+
+    let index = 0, busy = false, timer = null;
+    function paint() {
+      buttons.forEach((b, i) => {
+        const on = i === index % n;
+        b.classList.toggle('is-active', on);
+        if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+      });
+    }
+    function go(i, instant) {
+      index = i;
+      track.style.transition = instant ? 'none' : '';
+      track.style.transform = `translateX(-${index * 100}%)`;
+      if (instant) { void track.offsetWidth; track.style.transition = ''; }
+      paint();
+    }
+    function next() {
+      if (busy) return;
+      if (index >= n - 1) {                           // slide on to the copy of slide 1, then jump back to the real one
+        busy = true; go(n);
+        setTimeout(() => { go(0, true); busy = false; }, 1000);
+      } else go(index + 1);
+    }
+    function prev() {
+      if (busy) return;
+      if (index <= 0) go(n, true);                    // jump to the copy first, then slide back one
+      go(index - 1);
+    }
+    function start() { if (!reduce && !timer) timer = setInterval(next, delay); }
+    function stop() { clearInterval(timer); timer = null; }
+    function restart() { stop(); start(); }
+
+    hero.addEventListener('mouseenter', stop); hero.addEventListener('mouseleave', start);
+    hero.addEventListener('focusin', stop); hero.addEventListener('focusout', start);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
+    let x0 = null;                                    // swipe on phones
+    hero.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    hero.addEventListener('touchend', (e) => {
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) < 50) return;
+      if (dx < 0) next(); else prev();
+      restart();
+    });
+    go(0, true); start();
+  }
+
   async function init() {
-    setupNav();
-    setupFooter();
-    setupBlueMinuteDialog();
-    setupFilters();
-    setupNewsletter();
+   setupNav(); 
+   setupFooter(); 
+   setupBlueMinuteDialog(); 
+   setupFilters(); 
+   setupNewsletter(); 
+   setupHeroSlider();
 
     const isHome = location.pathname === '/' || location.pathname === '/index.html';
 
