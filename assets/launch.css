@@ -419,3 +419,13 @@
 [data-page="submit"] .page-hero p {
   color: #fff;
 }
+
+.nav-links a.btn,
+.nav-links a.btn[aria-current="page"] {
+  color: #fff !important;
+  text-decoration: none;
+  box-shadow: none;
+}
+.nav-links a.btn[aria-current="page"] {
+  background: #065f86;
+}
