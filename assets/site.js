@@ -374,20 +374,20 @@
           <article class="detail-main">
             ${publicFields(record) || '<div class="empty">More information is available on the official opportunity page.</div>'}
           </article>
-          <aside class="detail-side">
-            <div class="verified-label">
-              <span>✓</span>
-              <div>
-                <strong>Opportunity details</strong>
-                <small>Always confirm the latest criteria with the provider.</small>
-              </div>
-            </div>
-            <div class="side-fact">
-              <span>Category</span>
-              <strong>${escapeHtml(category)}</strong>
-            </div>
-            ${source}
-          </aside>
+  <aside class="detail-side">
+    <div class="verified-label">
+      <span>✓</span>
+      <div>
+       <strong>Verified by Hands on Blue</strong>
+       <small>This opportunity has been reviewed for accuracy. Always confirm the latest details on the official page before applying.</small>
+     </div>
+   </div>
+  <div class="side-fact">
+    <span>Category</span>
+    <strong>${escapeHtml(category)}</strong>
+  </div>
+  ${source}
+</aside>
         </div>
       </div>`;
 
