@@ -788,6 +788,14 @@
     'https://plus.unsplash.com/premium_photo-1693723595870-2b8bad09b4c2?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
     'https://plus.unsplash.com/premium_photo-1661841437632-6cfb212f0f24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D'
   ];
+
+  function imageUrl(raw) {
+  return safeUrl(raw);
+}
+
+function cssUrl(u) {
+  return String(u).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
+}
   function setupHeroSlider() {
     const hero = $('.hero');
     const urls = HERO_IMAGES.map(imageUrl).filter(Boolean);
@@ -866,8 +874,7 @@
    setupBlueMinuteDialog(); 
    setupFilters(); 
    setupNewsletter(); 
-   setupHeroSlider();
-
+  try { setupHeroSlider(); } catch (e) { console.error('Hero slider failed', e); }
     const isHome = location.pathname === '/' || location.pathname === '/index.html';
 
     if ($('#minutesCards') || isHome) {
