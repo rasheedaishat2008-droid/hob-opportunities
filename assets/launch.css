@@ -81,116 +81,139 @@
 }
 
 /* ===== MOBILE (phones) ===== */
+/* ===== MOBILE (phones) ===== */
 @media (max-width: 680px) {
+
+  /* Hero */
   .hero {
-    padding: 42px 0 36px;
+    padding: 40px 0 32px;
   }
-  .hero-grid {
-    grid-template-columns: 1fr;
+  .hero h1 {
+    font-size: clamp(30px, 8.5vw, 40px);
+    line-height: 1.15;
   }
   .hero-visual {
     display: none;
   }
-  .hero h1 {
-    font-size: clamp(32px, 9vw, 42px);
-  }
 
+  /* Opportunity cards */
   .op-card-photo,
   .op-photo {
-    height: 180px;
+    height: 175px;
   }
   .op-card-body {
-    padding: 16px;
+    padding: 15px 16px 18px;
   }
   .op-card h3 {
-    font-size: 18px;
+    font-size: 17.5px;
+    line-height: 1.3;
+  }
+  .card-description {
+    font-size: 13.5px;
   }
 
+  /* Categories */
   .categories {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
-  .service-card {
+  /* Service cards */
+  .service-card,
+  .service-card-link {
     grid-template-columns: 1fr;
   }
-  .service-photo,
   .service-card .op-photo,
-  .service-card .ocean-photo {
-    height: 160px;
-    min-height: 160px;
-    border-radius: 19px 19px 0 0;
+  .service-card .ocean-photo,
+  .service-card .service-photo {
+    height: 155px;
+    min-height: 155px;
+    border-radius: 18px 18px 0 0;
   }
   .service-copy {
-    padding: 18px;
+    padding: 16px 18px 20px;
   }
 
+  /* Story / Minutes grids */
   .story-grid,
   .service-grid,
   .minutes-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .story-photo {
-    height: 180px;
+    height: 175px;
   }
 
+  /* Detail page */
   .detail-hero {
-    min-height: 380px;
-    padding: 24px 18px;
+    min-height: 360px;
+    padding: 22px 16px;
     align-items: flex-end;
-  }
-  .detail-hero-shade {
-    background: linear-gradient(0deg, #001a2bf5 0%, #002b42bb 62%, #003d5b38 100%);
+    border-radius: 18px;
   }
   .detail-hero h1 {
-    font-size: clamp(28px, 8vw, 38px);
+    font-size: clamp(26px, 7.5vw, 34px);
+  }
+  .detail-summary {
+    font-size: 14.5px;
   }
   .detail-columns {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .detail-side {
     position: static;
-    grid-row: 1;
-    margin-bottom: 16px;
-  }
-  .detail-main {
-    grid-row: 2;
+    order: -1; /* moves sidebar above content on mobile */
+    margin-bottom: 8px;
   }
   .detail-hero-actions {
     flex-wrap: wrap;
+    gap: 10px;
+  }
+  .detail-hero-actions .btn {
+    flex: 1 1 auto;
   }
 
+  /* Journey steps */
   .journey {
-    gap: 6px;
-    padding: 12px 8px;
+    gap: 4px;
+    padding: 12px 6px;
+    margin: 18px auto;
   }
   .journey-step {
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     font-size: 11px;
     text-align: center;
   }
   .journey-line {
-    width: 8vw;
+    width: 7vw;
+    min-width: 18px;
   }
 
+  /* Newsletter */
   .newsletter-signup {
     grid-template-columns: 1fr;
     padding: 22px 18px;
+    gap: 18px;
   }
   .newsletter-signup h2 {
-    font-size: 22px;
+    font-size: 21px;
   }
 
+  /* Brand */
   .brand-logo {
-    width: 64px;
-    max-width: 22vw;
+    width: 62px;
+    max-width: 21vw;
   }
   .site-footer .brand-logo {
-    width: 68px;
+    width: 66px;
   }
+
+  /* General spacing */
   .ocean-page-hero {
-    padding: 36px 0;
+    padding: 32px 0;
   }
 }
 
