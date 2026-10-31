@@ -796,6 +796,25 @@
 function cssUrl(u) {
   return String(u).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
 }
+
+  const HERO_COPY = [
+  {
+    eyebrow: 'A platform by Hands on Blue',
+    title: 'Global opportunities for a healthier blue world.',
+    text: 'Discover scholarships, grants, fellowships, blue economy jobs and more from trusted sources.'
+  },
+  {
+    eyebrow: 'Funding and learning',
+    title: 'Find scholarships and grants that fit your next step.',
+    text: 'Browse verified funding opportunities from trusted providers around the world.'
+  },
+  {
+    eyebrow: 'Careers in the blue economy',
+    title: 'Build a career that protects our oceans.',
+    text: 'Explore jobs, internships and fellowships in the blue economy.'
+  }
+];
+  
   function setupHeroSlider() {
     const hero = $('.hero');
     const urls = HERO_IMAGES.map(imageUrl).filter(Boolean);
@@ -803,6 +822,28 @@ function cssUrl(u) {
     const n = urls.length, delay = 6000;
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     hero.classList.add('hero--slider');
+    const copyEls = {
+  eyebrow: $('.hero-grid .eyebrow', hero),
+  title: $('.hero-grid h1', hero),
+  text: $('.hero-grid h1 ~ p', hero)
+};
+const copyList = Object.values(copyEls).filter(Boolean);
+copyList.forEach((el) => el.classList.add('hero-copy'));
+let lastCopy = 0, copyTimer = null;
+
+function setCopy(i) {
+  const c = HERO_COPY[i];
+  if (!c || !copyEls.title || i === lastCopy) return;
+  lastCopy = i;
+  copyList.forEach((el) => el.classList.add('hero-copy-out'));   // fade out
+  clearTimeout(copyTimer);
+  copyTimer = setTimeout(() => {
+    if (copyEls.eyebrow) copyEls.eyebrow.textContent = c.eyebrow;
+    copyEls.title.textContent = c.title;
+    if (copyEls.text) copyEls.text.textContent = c.text;
+    copyList.forEach((el) => el.classList.remove('hero-copy-out')); // fade in
+  }, 300);
+}
 
     const view = document.createElement('div'); view.className = 'hero-slides'; view.setAttribute('aria-hidden', 'true');
     const track = document.createElement('div'); track.className = 'hero-track';
@@ -829,6 +870,7 @@ function cssUrl(u) {
         b.classList.toggle('is-active', on);
         if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
       });
+      setCopy(index % n); 
     }
     function go(i, instant) {
       index = i;
