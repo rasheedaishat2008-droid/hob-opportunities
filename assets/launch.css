@@ -250,4 +250,40 @@
     min-height: 160px;
     border-radius: 19px 19px 0 0;
   }
+
+
+  /* ===== Loading & Empty States ===== */
+.loading-state,
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: #5a707b;
+  background: #f8fbfc;
+  border: 1px dashed #d0e3e8;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.loading-state {
+  color: #087eae;
+  font-weight: 600;
+}
+
+.empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #062c42;
+  font-size: 17px;
+}
+
+.empty a {
+  color: #087eae;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.empty a:hover {
+  text-decoration: underline;
+}
 }
