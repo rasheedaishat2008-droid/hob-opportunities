@@ -43,13 +43,21 @@
   }
 
   function safeUrl(raw) {
-    try {
-      const u = new URL(String(raw || ''), location.origin);
-      return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? u.href : '';
-    } catch (_) {
-      return '';
-    }
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  if (s.startsWith('//')) {
+    s = 'https:' + s;
+  } else if (!/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[/#.?]/.test(s)) {
+    // no scheme: treat emails as mailto, everything else as an https website
+    s = (/^[^\s/@]+@[^\s/@]+\.[^\s/@]+$/.test(s) ? 'mailto:' : 'https://') + s;
   }
+  try {
+    const u = new URL(s, location.origin);
+    return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? u.href : '';
+  } catch (_) {
+    return '';
+  }
+}
 
   function endpoint(type) {
     const base = String(cfg.API_URL || '').trim();
