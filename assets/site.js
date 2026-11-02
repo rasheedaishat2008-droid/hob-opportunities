@@ -685,7 +685,7 @@
         <div class="footer-grid">
           <div>
             <a class="brand footer-brand" href="/">
-              <img class="brand-logo" src="/assets/hob-logo-approved.png?v=20261026-a" alt="Hands on Blue logo">
+              <img class="brand-logo" src="/assets/hob-logo-emblem.png?v=20261102-logo1" alt="Hands on Blue logo">
               <span>HOB Opportunities</span>
             </a>
             <p>Discover opportunities for growth, connected to a healthier blue world.</p>
