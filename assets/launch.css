@@ -1,5 +1,5 @@
 :root{--navy:#062c42;--teal:#087eae;--mint:#e5f6f8;--ink:#142d3a;--muted:#5a707b;--paper:#f4f9fa;--line:#d9e7ea}
-.nav{min-height:68px}.brand{gap:9px}.brand-logo{display:block;width:78px;max-width:24vw;height:auto;object-fit:contain}.site-footer .brand-logo{width:76px}.brand>span{font-size:14px;white-space:nowrap}.nav-links{gap:14px}.nav-links a[aria-current=page]{color:#087eae;font-weight:800}
+.nav{min-height:68px}.brand{gap:9px}.brand-logo{display:block;height:52px;width:auto;object-fit:contain;border-radius:0;box-shadow:none;background:none}.site-footer .brand-logo{height:56px;width:auto}.brand>span{font-size:14px;white-space:nowrap}.nav-links{gap:14px}.nav-links a[aria-current=page]{color:#087eae;font-weight:800}
 .hero{position:relative;isolation:isolate;overflow:hidden;background:#062b42;padding:70px 0 64px}.hero:before{content:"";position:absolute;z-index:0;inset:0;background-image:linear-gradient(90deg,#031d30f2 0%,#052a40d9 46%,#03243c50 100%),url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:auto,500% 200%;background-position:center,0% 0%;background-repeat:no-repeat}.hero>.wrap{position:relative;z-index:1}.hero-grid{grid-template-columns:minmax(0,1.25fr) minmax(220px,.55fr);gap:34px}.hero h1{max-width:700px;font-family:Georgia,'Times New Roman',serif;font-size:clamp(44px,6.2vw,76px);font-weight:500;letter-spacing:-.04em}.hero p{max-width:650px}.hero .eyebrow{color:#89e3ea}.hero .btn{background:#087eae}.hero-visual{border-color:#c8edf044;background:#06283d55;backdrop-filter:blur(4px)}.visual-orb{height:185px;background-image:linear-gradient(#022a3c12,#022a3c12),url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:auto,500% 200%;background-position:center,100% 0%;background-repeat:no-repeat}.visual-stats div{background:#001c2d8a}.hero-note{max-width:620px}
 .ocean-photo{background-image:url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:500% 200%;background-repeat:no-repeat;background-color:#06324b;background-position:center center}
 .scene-0{background-position:0% 0%}.scene-1{background-position:25% 0%}.scene-2{background-position:50% 0%}.scene-3{background-position:75% 0%}.scene-4{background-position:100% 0%}.scene-5{background-position:0% 100%}.scene-6{background-position:25% 100%}.scene-7{background-position:50% 100%}.scene-8{background-position:75% 100%}.scene-9{background-position:100% 100%}
@@ -204,11 +204,12 @@
 
   /* Brand */
   .brand-logo {
-    width: 62px;
-    max-width: 21vw;
+    height: 44px;
+    width: auto;
   }
   .site-footer .brand-logo {
-    width: 66px;
+    height: 48px;
+    width: auto;
   }
 
   /* General spacing */
@@ -397,7 +398,7 @@
   background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1580133747109-c00e1924072d?w=1920&auto=format&fit=crop&q=70') !important;
 }
 [data-page="stories"] .page-hero::before {
-  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://plus.unsplash.com/premium_photo-1739091068222-31952d3a91d5?w=1920&auto=format&fit=crop&q=70') !important;
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1583131455094-37bdbd8d0ec6?w=1920&auto=format&fit=crop&q=70') !important;
 }
 [data-page="submit"] .page-hero::before {
   background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1580133747829-669f59cdda83?w=1920&auto=format&fit=crop&q=70') !important;
@@ -534,8 +535,7 @@
 .hero-pause:hover,
 .hero-pause:focus-visible { background: rgba(255,255,255,.4); }
 
-/* 5. Logo no longer a hard square */
-.brand-logo { border-radius: 10px; box-shadow: 0 2px 8px rgba(6,28,45,.18); }
+/* Logo sizing is set at the top of this file (.brand-logo) */
 
 /* phones */
 @media (max-width: 600px) {
