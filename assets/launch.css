@@ -453,3 +453,98 @@
   position: relative;
   z-index: 1;
 }
+/* ===== HERO REFRESH ===== */
+
+/* 3. Shorter hero, single column (glass card removed) */
+.hero {
+  padding: clamp(40px, 6vw, 68px) 0 clamp(60px, 8vw, 84px) !important;
+  min-height: 0 !important;
+}
+.hero .hero-grid { grid-template-columns: 1fr !important; }
+.hero .hero-grid > div { max-width: 720px; }
+
+/* 1 + 6. Readable text over any photo */
+.hero-slides::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6,28,45,.86) 0%, rgba(6,28,45,.55) 55%, rgba(6,28,45,.25) 100%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: clamp(1.85rem, 4vw + .8rem, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
+}
+.hero p:not(.hero-note) {
+  font-size: clamp(1rem, .8vw + .85rem, 1.2rem);
+  line-height: 1.55;
+  text-shadow: 0 1px 10px rgba(0,0,0,.35);
+}
+.hero .eyebrow {
+  color: #8fe3ee;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.hero .hero-note {
+  font-size: .9rem;
+  color: rgba(255,255,255,.88);
+}
+
+/* search bar */
+.hero .searchbar { display: flex; gap: 8px; }
+.hero .searchbar input { flex: 1; min-width: 0; font-size: 16px; }
+
+/* 7. Quick category links */
+.quick-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 6px; }
+.quick-links span { font-size: .85rem; color: rgba(255,255,255,.8); margin-right: 2px; }
+.quick-links a {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  color: #fff;
+  font-size: .88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s;
+}
+.quick-links a:hover,
+.quick-links a:focus-visible { background: rgba(255,255,255,.26); }
+
+/* 8. Trust line */
+.hero-trust { margin-top: 14px; font-size: .88rem; font-weight: 500; color: #bfeff5; }
+
+/* 9. Bigger tap targets + pause button */
+.hero-dots { align-items: center; gap: 10px; bottom: 16px; }
+.hero-dot { position: relative; }
+.hero-dot::after { content: ""; position: absolute; inset: -10px -5px; }
+.hero-pause {
+  width: 26px; height: 26px;
+  margin-left: 6px;
+  border: 0; border-radius: 50%;
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  font-size: 10px; line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.hero-pause:hover,
+.hero-pause:focus-visible { background: rgba(255,255,255,.4); }
+
+/* 5. Logo no longer a hard square */
+.brand-logo { border-radius: 10px; box-shadow: 0 2px 8px rgba(6,28,45,.18); }
+
+/* phones */
+@media (max-width: 600px) {
+  .hero { padding: 28px 0 64px !important; }
+  .hero .eyebrow { font-size: .72rem; margin-bottom: 10px; }
+  .hero h1 { font-size: 1.8rem; margin-bottom: 12px; }
+  .hero p:not(.hero-note) { font-size: .98rem; margin-bottom: 18px; }
+  .hero .searchbar { padding: 6px; border-radius: 14px; }
+  .hero .searchbar .btn { padding: 10px 16px; font-size: .9rem; }
+  .quick-links a { padding: 6px 12px; font-size: .82rem; }
+  .hero .hero-note { font-size: .8rem; margin-top: 10px; }
+}
