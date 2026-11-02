@@ -43,21 +43,21 @@
   }
 
   function safeUrl(raw) {
-  let s = String(raw || '').trim();
-  if (!s) return '';
-  if (s.startsWith('//')) {
-    s = 'https:' + s;
-  } else if (!/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[/#.?]/.test(s)) {
-    // no scheme: treat emails as mailto, everything else as an https website
-    s = (/^[^\s/@]+@[^\s/@]+\.[^\s/@]+$/.test(s) ? 'mailto:' : 'https://') + s;
+    let s = String(raw || '').trim();
+    if (!s) return '';
+    if (s.startsWith('//')) {
+      s = 'https:' + s;
+    } else if (!/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[/#.?]/.test(s)) {
+      // no scheme: treat emails as mailto, everything else as an https website
+      s = (/^[^\s/@]+@[^\s/@]+\.[^\s/@]+$/.test(s) ? 'mailto:' : 'https://') + s;
+    }
+    try {
+      const u = new URL(s, location.origin);
+      return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? u.href : '';
+    } catch (_) {
+      return '';
+    }
   }
-  try {
-    const u = new URL(s, location.origin);
-    return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? u.href : '';
-  } catch (_) {
-    return '';
-  }
-}
 
   function endpoint(type) {
     const base = String(cfg.API_URL || '').trim();
@@ -307,7 +307,7 @@
       .join('') + guideExtra;
   }
 
-    function renderDetail() {
+  function renderDetail() {
     const root = $('#detailRoot');
     if (!root) return;
 
@@ -382,20 +382,20 @@
           <article class="detail-main">
             ${publicFields(record) || '<div class="empty">More information is available on the official opportunity page.</div>'}
           </article>
-  <aside class="detail-side">
-    <div class="verified-label">
-      <span>✓</span>
-      <div>
-       <strong>Verified by Hands on Blue</strong>
-       <small>This opportunity has been reviewed for accuracy. Always confirm the latest details on the official page before applying.</small>
-     </div>
-   </div>
-  <div class="side-fact">
-    <span>Category</span>
-    <strong>${escapeHtml(category)}</strong>
-  </div>
-  ${source}
-</aside>
+          <aside class="detail-side">
+            <div class="verified-label">
+              <span>✓</span>
+              <div>
+                <strong>Verified by Hands on Blue</strong>
+                <small>This opportunity has been reviewed for accuracy. Always confirm the latest details on the official page before applying.</small>
+              </div>
+            </div>
+            <div class="side-fact">
+              <span>Category</span>
+              <strong>${escapeHtml(category)}</strong>
+            </div>
+            ${source}
+          </aside>
         </div>
       </div>`;
 
@@ -409,6 +409,13 @@
 
   function renderOpportunityViews() {
     const all = state.opportunities;
+
+    // Hero trust line: live count of verified listings
+    const trust = $('#heroTrust');
+    if (trust && all.length) {
+      trust.textContent = `✓ ${all.length} verified opportunities · each checked against the official provider`;
+    }
+
     draw($('#featuredCards'), all.slice(0, 6), 'New verified opportunities will appear here.');
     draw($('#directoryCards'), filteredOpportunities(), 'No opportunities match those filters.');
     draw($('#categoryCards'), filteredOpportunities(), 'No opportunities in this category yet.');
@@ -487,7 +494,7 @@
     return field(r, ['Title', 'Service Name', 'Name', 'Service']) || 'HOB service';
   }
 
-    function renderServices() {
+  function renderServices() {
     const target = $('#servicesCards');
     if (!target) return;
     resetScenes();
@@ -645,7 +652,7 @@
     const nav = $('#navLinks');
     if (nav) {
       nav.innerHTML = `
-        <a href="/opportunities/">Opportunities</a>
+        <a href="/opportunities/">Browse</a>
         <a href="/category/">Categories</a>
         <a href="/services/">Services</a>
         <a href="/blue-minutes/">Blue Minutes</a>
@@ -788,41 +795,41 @@
     });
   }
 
-    // ---- Homepage hero slider: photos slide across behind the headline; dots jump to a slide ----
+  // ---- Homepage hero slider: photos slide across behind the headline; dots jump to a slide ----
   // Add more wide photos to this list (at least 1920px across; for Unsplash links use w=1920).
   // With only one image the hero stays static, exactly as it is now.
-    const HERO_IMAGES = [
+  const HERO_IMAGES = [
     'https://images.unsplash.com/photo-1779122626135-5efe7112ad24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
-    'https://plus.unsplash.com/premium_photo-1693723595870-2b8bad09b4c2?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
-    'https://plus.unsplash.com/premium_photo-1661841437632-6cfb212f0f24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D'
+    'https://images.unsplash.com/photo-1584306758710-7b452b379187?w=1920&auto=format&fit=crop&q=70',
+    'https://images.unsplash.com/photo-1568785629399-0cd9324febdf?w=1920&auto=format&fit=crop&q=70'
   ];
 
   function imageUrl(raw) {
-  return safeUrl(raw);
-}
+    return safeUrl(raw);
+  }
 
-function cssUrl(u) {
-  return String(u).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
-}
+  function cssUrl(u) {
+    return String(u).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
+  }
 
   const HERO_COPY = [
-  {
-    eyebrow: 'A platform by Hands on Blue',
-    title: 'Global opportunities for a healthier blue world.',
-    text: 'Discover scholarships, grants, fellowships, blue economy jobs and more from trusted sources.'
-  },
-  {
-    eyebrow: 'Funding and learning',
-    title: 'Find scholarships and grants that fit your next step.',
-    text: 'Browse verified funding opportunities from trusted providers around the world.'
-  },
-  {
-    eyebrow: 'Careers in the blue economy',
-    title: 'Build a career that protects our oceans.',
-    text: 'Explore jobs, internships and fellowships in the blue economy.'
-  }
-];
-  
+    {
+      eyebrow: 'A platform by Hands on Blue',
+      title: 'Global opportunities for a healthier blue world.',
+      text: 'Discover scholarships, grants, fellowships, blue economy jobs and more from trusted sources.'
+    },
+    {
+      eyebrow: 'Funding and learning',
+      title: 'Find scholarships and grants that fit your next step.',
+      text: 'Browse verified funding opportunities from trusted providers around the world.'
+    },
+    {
+      eyebrow: 'Careers in the blue economy',
+      title: 'Build a career that protects our oceans.',
+      text: 'Explore jobs, internships and fellowships in the blue economy.'
+    }
+  ];
+
   function setupHeroSlider() {
     const hero = $('.hero');
     const urls = HERO_IMAGES.map(imageUrl).filter(Boolean);
@@ -830,28 +837,29 @@ function cssUrl(u) {
     const n = urls.length, delay = 6000;
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     hero.classList.add('hero--slider');
-    const copyEls = {
-  eyebrow: $('.hero-grid .eyebrow', hero),
-  title: $('.hero-grid h1', hero),
-  text: $('.hero-grid h1 ~ p', hero)
-};
-const copyList = Object.values(copyEls).filter(Boolean);
-copyList.forEach((el) => el.classList.add('hero-copy'));
-let lastCopy = 0, copyTimer = null;
 
-function setCopy(i) {
-  const c = HERO_COPY[i];
-  if (!c || !copyEls.title || i === lastCopy) return;
-  lastCopy = i;
-  copyList.forEach((el) => el.classList.add('hero-copy-out'));   // fade out
-  clearTimeout(copyTimer);
-  copyTimer = setTimeout(() => {
-    if (copyEls.eyebrow) copyEls.eyebrow.textContent = c.eyebrow;
-    copyEls.title.textContent = c.title;
-    if (copyEls.text) copyEls.text.textContent = c.text;
-    copyList.forEach((el) => el.classList.remove('hero-copy-out')); // fade in
-  }, 300);
-}
+    const copyEls = {
+      eyebrow: $('.hero-grid .eyebrow', hero),
+      title: $('.hero-grid h1', hero),
+      text: $('.hero-grid h1 ~ p', hero)
+    };
+    const copyList = Object.values(copyEls).filter(Boolean);
+    copyList.forEach((el) => el.classList.add('hero-copy'));
+    let lastCopy = 0, copyTimer = null;
+
+    function setCopy(i) {
+      const c = HERO_COPY[i];
+      if (!c || !copyEls.title || i === lastCopy) return;
+      lastCopy = i;
+      copyList.forEach((el) => el.classList.add('hero-copy-out'));   // fade out
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => {
+        if (copyEls.eyebrow) copyEls.eyebrow.textContent = c.eyebrow;
+        copyEls.title.textContent = c.title;
+        if (copyEls.text) copyEls.text.textContent = c.text;
+        copyList.forEach((el) => el.classList.remove('hero-copy-out')); // fade in
+      }, 300);
+    }
 
     const view = document.createElement('div'); view.className = 'hero-slides'; view.setAttribute('aria-hidden', 'true');
     const track = document.createElement('div'); track.className = 'hero-track';
@@ -872,13 +880,31 @@ function setCopy(i) {
     hero.appendChild(dots);
 
     let index = 0, busy = false, timer = null;
+
+    // Pause / play control (accessibility)
+    let paused = false;
+    if (!reduce) {
+      const pauseBtn = document.createElement('button');
+      pauseBtn.type = 'button';
+      pauseBtn.className = 'hero-pause';
+      pauseBtn.innerHTML = '❚❚';
+      pauseBtn.setAttribute('aria-label', 'Pause slideshow');
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.innerHTML = paused ? '▶' : '❚❚';
+        pauseBtn.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
+        if (paused) stop(); else start();
+      });
+      dots.appendChild(pauseBtn);
+    }
+
     function paint() {
       buttons.forEach((b, i) => {
         const on = i === index % n;
         b.classList.toggle('is-active', on);
         if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
       });
-      setCopy(index % n); 
+      setCopy(index % n);
     }
     function go(i, instant) {
       index = i;
@@ -899,7 +925,7 @@ function setCopy(i) {
       if (index <= 0) go(n, true);                    // jump to the copy first, then slide back one
       go(index - 1);
     }
-    function start() { if (!reduce && !timer) timer = setInterval(next, delay); }
+    function start() { if (!reduce && !paused && !timer) timer = setInterval(next, delay); }
     function stop() { clearInterval(timer); timer = null; }
     function restart() { stop(); start(); }
 
@@ -919,13 +945,14 @@ function setCopy(i) {
   }
 
   async function init() {
-   document.body.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
-   setupNav(); 
-   setupFooter(); 
-   setupBlueMinuteDialog(); 
-   setupFilters(); 
-   setupNewsletter(); 
-  try { setupHeroSlider(); } catch (e) { console.error('Hero slider failed', e); }
+    document.body.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
+    setupNav();
+    setupFooter();
+    setupBlueMinuteDialog();
+    setupFilters();
+    setupNewsletter();
+    try { setupHeroSlider(); } catch (e) { console.error('Hero slider failed', e); }
+
     const isHome = location.pathname === '/' || location.pathname === '/index.html';
 
     if ($('#minutesCards') || isHome) {
