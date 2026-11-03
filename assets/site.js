@@ -69,7 +69,31 @@
     return url.href;
   }
 
+  // ---- Feed cache: repeat visits load instantly and keep working if Apps Script is down ----
+  const CACHE_MS = 10 * 60 * 1000;   // reuse a saved copy for 10 minutes
+  function cacheGet(type) {
+    try {
+      const c = JSON.parse(localStorage.getItem('hobFeed:' + type) || 'null');
+      return c && Array.isArray(c.data) ? c : null;
+    } catch (_) { return null; }
+  }
+  function cacheSet(type, data) {
+    try { localStorage.setItem('hobFeed:' + type, JSON.stringify({ t: Date.now(), data })); } catch (_) {}
+  }
   async function fetchFeed(type) {
+    const cached = cacheGet(type);
+    if (cached && Date.now() - cached.t < CACHE_MS) return cached.data;
+    try {
+      const data = await fetchFeedLive(type);
+      cacheSet(type, data);
+      return data;
+    } catch (e) {
+      if (cached) return cached.data;   // show the last good copy instead of an error
+      throw e;
+    }
+  }
+
+  async function fetchFeedLive(type) {
     const url = endpoint(type);
     const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -413,7 +437,10 @@
     // Hero trust line: live count of verified listings
     const trust = $('#heroTrust');
     if (trust && all.length) {
-      trust.textContent = `✓ ${all.length} verified opportunities · each checked against the official provider`;
+      const latest = all.map((r) => field(r, API_FIELDS.added)).filter(Boolean).sort().pop();
+      const d = latest ? new Date(latest) : null;
+      const when = d && !isNaN(d) ? ` · latest added ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
+      trust.textContent = `✓ ${all.length} verified opportunities${when}`;
     }
 
     draw($('#featuredCards'), all.slice(0, 6), 'New verified opportunities will appear here.');
@@ -500,7 +527,7 @@
     resetScenes();
 
     if (state.errors.services) {
-      target.innerHTML = '<div class="empty"><strong>Services could not be loaded.</strong><br>Check the deployed Apps Script feed and the Services sheet tab.</div>';
+      target.innerHTML = '<div class="empty"><strong>Services could not be loaded right now.</strong><br>Please try again in a few minutes.</div>';
       return;
     }
 
@@ -685,8 +712,7 @@
         <div class="footer-grid">
           <div>
             <a class="brand footer-brand" href="/">
-              <img class="brand-logo" src="/assets/hob-logo-emblem.png?v=20261102-logo1" alt="Hands on Blue logo">
-              <span>HOB Opportunities</span>
+              <img class="brand-logo" src="/assets/hob-logo-horizontal-light.png?v=20261102-logo3" alt="Hands on Blue Ocean Conservation Trust">
             </a>
             <p>Discover opportunities for growth, connected to a healthier blue world.</p>
           </div>
@@ -718,6 +744,7 @@
           <form data-newsletter-form>
             <label class="sr-only" for="newsletterEmail">Email address</label>
             <input id="newsletterEmail" name="email" type="email" autocomplete="email" placeholder="Your email address" required>
+            <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
             <label class="newsletter-consent">
               <input type="checkbox" name="consent" required> I agree to receive email updates from HOB.
             </label>
@@ -764,6 +791,8 @@
         const button = $('button[type="submit"]', form);
         const email = $('input[name="email"]', form)?.value.trim();
         const consent = $('input[name="consent"]', form)?.checked;
+        const trap = $('input[name="website"]', form)?.value || '';
+        if (trap) { form.reset(); if (status) status.textContent = 'Thanks — you’re on the list.'; return; }   // spam trap
 
         if (!email || !consent) {
           if (status) status.textContent = 'Enter your email and confirm consent to subscribe.';
@@ -782,10 +811,10 @@
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-            body: JSON.stringify({ email, consent: true, source: 'HOB website newsletter' })
+            body: JSON.stringify({ email, consent: true, website: trap, source: 'HOB website newsletter' })
           });
           form.reset();
-          if (status) status.textContent = 'Signup request sent. Please check the Subscriptions tab to confirm it was recorded; no confirmation email is sent yet.';
+          if (status) status.textContent = 'Thanks — you’re on the list. We’ll only use your email for HOB updates.';
         } catch (_) {
           if (status) status.textContent = 'We could not send that just now. Please try again later.';
         } finally {
