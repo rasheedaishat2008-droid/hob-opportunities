@@ -349,7 +349,7 @@
 
 /* ===== Category tile images (replace the sprite crops) ===== */
 .categories .category-card.category-card[href*="scholar" i]:before {
-  background-image: url('https://plus.unsplash.com/premium_photo-1714397546754-3c1ef1be26e9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-image: url('https://images.unsplash.com/photo-1623461487986-9400110de28e?w=600&auto=format&fit=crop&q=60');
   background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
 }
 .categories .category-card.category-card[href*="grant" i]:before {
@@ -369,7 +369,7 @@
   background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
 }
 .categories .category-card.category-card[href*="undergrad" i]:before {
-  background-image: url('https://plus.unsplash.com/premium_photo-1683887034552-4635692bb57c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-image: url('https://images.unsplash.com/photo-1773332611476-6ec2ba68049f?w=600&auto=format&fit=crop&q=60');
   background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
 }
 .categories .category-card.category-card[href*="train" i]:before {
@@ -448,7 +448,7 @@
   background-position: center !important;
   background-repeat: no-repeat !important;
   opacity: 1 !important;
-  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://media.istockphoto.com/id/2231439917/photo/a-beautiful-aquarium-fish-nature-background.webp?a=1&b=1&s=612x612&w=0&k=20&c=hWOWPtcL77OddPm1guXDjoL7j62kwDW0lN08sGEKgO4=') !important;
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&auto=format&fit=crop&q=70') !important;
 }
 [data-page="contact"] .page-hero .wrap {
   position: relative;
