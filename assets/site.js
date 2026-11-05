@@ -1,1041 +1,575 @@
-/* HOB Opportunities frontend for the current multi-tab Apps Script API. */
-(function () {
-  'use strict';
-  const cfg = window.HOB_SITE_CONFIG || {};
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-  const state = { opportunities: [], services: [], stories: [], blueMinutes: [], errors: {} };
+:root{--navy:#062c42;--teal:#087eae;--mint:#e5f6f8;--ink:#142d3a;--muted:#5a707b;--paper:#f4f9fa;--line:#d9e7ea}
+.nav{min-height:68px}.brand{gap:9px}.brand-logo{display:block;height:54px;width:auto;object-fit:contain;border-radius:0;box-shadow:none;background:none}.site-footer .brand-logo{height:60px;width:auto}.brand>span{font-size:15px;font-weight:600;line-height:1.2;white-space:nowrap;padding-left:12px;border-left:1px solid #cfe0e4}.site-footer .brand>span{border-left-color:#ffffff40}.nav-links{gap:14px}.nav-links a[aria-current=page]{color:#087eae;font-weight:800}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:#062b42;padding:70px 0 64px}.hero:before{content:"";position:absolute;z-index:0;inset:0;background-image:linear-gradient(90deg,#031d30f2 0%,#052a40d9 46%,#03243c50 100%),url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:auto,500% 200%;background-position:center,0% 0%;background-repeat:no-repeat}.hero>.wrap{position:relative;z-index:1}.hero-grid{grid-template-columns:minmax(0,1.25fr) minmax(220px,.55fr);gap:34px}.hero h1{max-width:700px;font-family:Georgia,'Times New Roman',serif;font-size:clamp(44px,6.2vw,76px);font-weight:500;letter-spacing:-.04em}.hero p{max-width:650px}.hero .eyebrow{color:#89e3ea}.hero .btn{background:#087eae}.hero-visual{border-color:#c8edf044;background:#06283d55;backdrop-filter:blur(4px)}.visual-orb{height:185px;background-image:linear-gradient(#022a3c12,#022a3c12),url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:auto,500% 200%;background-position:center,100% 0%;background-repeat:no-repeat}.visual-stats div{background:#001c2d8a}.hero-note{max-width:620px}
+.ocean-photo{background-image:url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:500% 200%;background-repeat:no-repeat;background-color:#06324b;background-position:center center}
+.scene-0{background-position:0% 0%}.scene-1{background-position:25% 0%}.scene-2{background-position:50% 0%}.scene-3{background-position:75% 0%}.scene-4{background-position:100% 0%}.scene-5{background-position:0% 100%}.scene-6{background-position:25% 100%}.scene-7{background-position:50% 100%}.scene-8{background-position:75% 100%}.scene-9{background-position:100% 100%}
 
-  const API_FIELDS = {
-    id: ['ID'],
-    title: ['Title', 'Story Title', 'Service Name', 'Name'],
-    slug: ['URL Slug'],
-    org: ['Organization', 'Organisation', 'Provider'],
-    cat: ['Category'],
-    caption: ['Webpage Caption', 'Short Caption', 'Summary', 'Description', 'Excerpt'],
-    eligibility: ['Eligibility and Eligible Countries'],
-    funding: ['Funding and Benefits'],
-    qualifications: ['Required Qualifications'],
-    documents: ['Required Documents'],
-    steps: ['Step-by-Step Application Instructions'],
-    apply: ['Direct Application Link'],
-    deadline: ['Deadline and Time Zone'],
-    guide: ['Full Opportunity Guide'],
-    official: ['Official Opportunity URL'],
-    added: ['Date Added'],
-    image: ['Image URL', 'Image', 'Thumbnail URL', 'Cover Image']
-  };
+/* Real images from Image URL column */
+/* Real opportunity images – better default crop */
+.op-photo {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  object-position: center 25%;
+  border-radius: 18px 18px 0 0;
+  background: #06324b;
+}
 
-  const LOCAL_FACTS = [
-    { Title: 'The ocean is Earth’s largest living space', Content: 'The ocean covers about 70% of Earth’s surface.', Source: 'NOAA Ocean Exploration', 'Source URL': 'https://oceanexplorer.noaa.gov/ocean-fact/explored/' },
-    { Title: 'Most of Earth’s water is in the ocean', Content: 'The ocean holds about 97% of Earth’s water.', Source: 'NOAA Ocean Service', 'Source URL': 'https://oceanservice.noaa.gov/facts/wherewater.html' },
-    { Title: 'Tiny ocean life has a major role', Content: 'Scientists estimate roughly half of Earth’s oxygen production comes from the ocean, much of it from plankton.', Source: 'NOAA Ocean Service', 'Source URL': 'https://oceanservice.noaa.gov/facts/ocean-oxygen.html' },
-    { Title: 'There is still much to map', Content: 'More than 23% of the seafloor has been mapped in high resolution; much remains to be explored.', Source: 'NOAA Ocean Exploration', 'Source URL': 'https://oceanexplorer.noaa.gov/explainers/mapping/' }
-  ];
+/* Detail page hero */
+.detail-photo.op-photo {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center 20%;
+  z-index: 0;
+}
 
-  const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+/* Service images */
+.service-card .op-photo {
+  object-position: center center;
+}
 
-  function field(record, names) {
-    for (const name of (Array.isArray(names) ? names : [names])) {
-      if (record && record[name] != null && String(record[name]).trim()) return String(record[name]).trim();
-    }
-    return '';
+.op-card{padding:0;overflow:hidden;min-height:100%;border-radius:18px;box-shadow:0 8px 26px #062d4010;transition:transform .18s ease,box-shadow .18s ease}.op-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px #062d4022}.op-card-photo{height:168px;width:100%;border-radius:18px 18px 0 0}.op-card-body{padding:18px;display:flex;flex:1;flex-direction:column}.card-topline{display:flex;align-items:center;justify-content:space-between}.mini-wave{color:#087eae;font-size:21px}.op-card h3{margin:12px 0 6px;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:600}.card-org{margin:0 0 7px;color:#47636f;font-size:12px;font-weight:750}.card-description{margin:0 0 12px;color:#637984;font-size:13px;line-height:1.6}.card-meta{padding-top:11px;border-top:1px solid var(--line);font-size:11px;color:#6c818a}.card-actions{margin-top:auto;padding-top:14px}.op-card .save-btn{font-size:12px}
+.category-card{overflow:hidden;border-radius:15px;box-shadow:0 5px 15px #062d400c}.category-card:before{content:"";display:block;height:112px;margin:-17px -14px 14px;background-image:url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:500% 200%;background-repeat:no-repeat}.categories .category-card:nth-child(1):before{background-position:0% 0%}.categories .category-card:nth-child(2):before{background-position:25% 0%}.categories .category-card:nth-child(3):before{background-position:50% 0%}.categories .category-card:nth-child(4):before{background-position:75% 0%}.categories .category-card:nth-child(5):before{background-position:100% 0%}.categories .category-card:nth-child(6):before{background-position:0% 100%}.categories .category-card:nth-child(7):before{background-position:25% 100%}
+.detail-shell{max-width:1120px;margin:0 auto}.detail-hero{position:relative;display:flex;align-items:center;min-height:360px;overflow:hidden;padding:38px;border-radius:22px;color:white;background:#052a41;isolation:isolate}.detail-photo{position:absolute;z-index:-2;inset:0;background-size:500% 200%;background-position:center}.detail-hero-shade{position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#001a2bef 0%,#002b42db 50%,#003d5b35 100%)}.detail-hero-copy{max-width:720px}.detail-hero .tag{background:#d5f5f7;color:#075777}.detail-hero h1{max-width:720px;margin:14px 0 9px;font-family:Georgia,'Times New Roman',serif;font-size:clamp(34px,5vw,55px);font-weight:500;line-height:1.08;letter-spacing:-.035em}.detail-hero .provider{color:#d5eef2}.detail-summary{max-width:650px;color:#e2f0f2;font-size:15px}.detail-chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.detail-chips span{border:1px solid #ffffff42;background:#ffffff15;border-radius:30px;padding:7px 11px;color:white;font-size:12px}.detail-hero-actions{display:flex;gap:9px;align-items:center;margin-top:18px}.detail-hero-actions .apply-btn{background:#087eae}.detail-save{background:#ffffff18;border-color:#ffffff70;color:white}.detail-save.saved{background:#d8f1f7;color:#075777}.journey{max-width:780px;margin:22px auto;display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 22px;border:1px solid var(--line);border-radius:18px;background:#fff}.journey-step{display:flex;align-items:center;gap:9px;font-weight:750;color:#55717d;font-size:13px}.journey-step i{display:grid;place-items:center;width:32px;height:32px;background:#e7f5f7;border-radius:50%;color:#087eae;font-size:11px;font-style:normal}.journey-step.current{color:#075777}.journey-step.current i{color:white;background:#087eae;box-shadow:0 3px 11px #087eae44}.journey-line{width:70px;height:2px;background:linear-gradient(90deg,#16b6d4,#d8e8eb)}
+.detail-columns{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:19px;align-items:start}.detail-main{display:grid;gap:11px}.opportunity-section{display:grid;grid-template-columns:40px minmax(0,1fr);gap:13px;padding:19px 21px;background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 18px #062d4008}.section-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#e6f7f8;color:#087eae;font-weight:850}.opportunity-section h2{font-family:inherit;font-size:15px;letter-spacing:0;margin:1px 0 7px}.section-copy{white-space:pre-line;color:#506973;font-size:14px;line-height:1.7;overflow-wrap:anywhere}.detail-side{position:sticky;top:88px;padding:20px;background:white;border:1px solid var(--line);border-radius:17px;box-shadow:0 10px 28px #062d4010}.verified-label{display:flex;gap:10px;padding-bottom:15px;border-bottom:1px solid var(--line)}.verified-label>span{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:#dff7ea;color:#168253;font-weight:900}.verified-label strong,.verified-label small{display:block}.verified-label strong{font-size:14px;color:#062c42}.verified-label small{margin-top:2px;color:#687f88;font-size:11px;line-height:1.45}.side-fact{padding:13px 0;border-bottom:1px solid var(--line)}.side-fact span,.side-fact strong{display:block}.side-fact span{color:#6c818a;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:800}.side-fact strong{margin-top:4px;color:#062c42;font-size:14px;overflow-wrap:anywhere}.side-apply{width:100%;margin-top:15px}.detail-side .source-link{display:block;text-align:center;margin-top:12px;color:#087eae;font-size:12px;font-weight:750;text-decoration:none}
+.story-grid,.service-grid,.minutes-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.story-card,.service-card,.minute-card{overflow:hidden;border:1px solid var(--line);border-radius:19px;background:white;box-shadow:0 8px 24px #062d400c}.story-photo,.service-photo{height:205px}.story-card-copy,.service-copy{position:relative;padding:22px}.story-mark{position:absolute;right:19px;top:7px;color:#d4eff3;font-family:Georgia,serif;font-size:70px;line-height:1}.story-card h2,.service-copy h2,.minute-card h2{font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:23px;margin:3px 0 8px}.story-byline,.story-opportunity{font-size:12px;color:#087eae;font-weight:750;margin:5px 0}.story-card-copy>p:last-child,.service-copy>p{color:#5f747e;font-size:14px;line-height:1.7}.service-card{display:grid;grid-template-columns:190px minmax(0,1fr);align-items:stretch}.service-photo{height:auto;min-height:210px}.service-copy{padding:22px}.service-copy .text-link{display:inline-block;margin-top:5px}.minute-card{display:flex;gap:16px;padding:23px}.minute-icon{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#087eae,#06344d);font-size:23px}.minute-meta{color:#087eae;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.minute-card h2{margin:5px 0;font-size:21px}.minute-card p{margin:8px 0 12px;color:#5f747e;font-size:14px;line-height:1.65}.ocean-page-hero{position:relative;isolation:isolate;overflow:hidden;background:#052c43}.ocean-page-hero:before{content:"";position:absolute;z-index:0;inset:0;background-image:linear-gradient(90deg,#05283eef,#063b5480),url('/assets/ocean-opportunities-sprite.png?v=20261026-a');background-size:auto,500% 200%;background-position:center,100% 0%;background-repeat:no-repeat}.ocean-page-hero>.wrap{position:relative;z-index:1}.ocean-page-hero h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,5vw,54px);font-weight:500}.ocean-page-hero p{max-width:680px}
+.blue-minute-dialog{width:min(520px,calc(100% - 28px));padding:0;border:0;border-radius:22px;background:transparent;box-shadow:0 24px 80px #001b2b66}.blue-minute-dialog::backdrop{background:#001b2bbd;backdrop-filter:blur(3px)}.blue-minute-modal{position:relative;padding:30px;background:radial-gradient(ellipse at 100% 0,#d8f1f7,transparent 48%),white;border:1px solid #cde6eb;border-radius:22px}.blue-minute-close{position:absolute;top:12px;right:13px;width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:white;color:var(--navy);font-size:22px;cursor:pointer}.blue-minute-kicker{color:#087eae;font-size:11px;letter-spacing:.12em;font-weight:900}.blue-minute-modal h2{margin:9px 0;font-family:Georgia,'Times New Roman',serif;font-size:25px}.blue-minute-fact{margin:12px 0 18px;font-size:18px;line-height:1.55;color:#294c5b}.blue-minute-source{color:#087eae;font-size:13px;font-weight:800;text-decoration:none}.blue-minute-source[hidden]{display:none}.blue-minute-note{margin:17px 0 0;padding-top:13px;border-top:1px solid var(--line);color:#71838b;font-size:12px}
+.categories{grid-template-columns:repeat(4,minmax(0,1fr))}.detail-photo{z-index:0}.detail-hero-shade{z-index:1}.detail-hero-copy{position:relative;z-index:2}.guide-toggle{margin-top:6px;padding:16px 18px;background:white;border:1px solid var(--line);border-radius:15px}.guide-toggle summary{color:#087eae;font-size:13px;font-weight:800;cursor:pointer}.guide-toggle .section-copy{padding-top:11px}
+.newsletter-signup{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.85fr);gap:28px;align-items:center;margin-top:28px;padding:26px 28px;border:1px solid #b9e5ea55;border-radius:18px;background:linear-gradient(115deg,#052b40,#064a63);color:#fff}.newsletter-signup .eyebrow{color:#8de1e8;font-size:10px;letter-spacing:.14em;font-weight:900}.newsletter-signup h2{margin:7px 0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:26px}.newsletter-signup p{margin:0;color:#d4e9ed;font-size:13px;line-height:1.55}.newsletter-signup form{display:grid;gap:10px}.newsletter-signup input[type=email]{width:100%;min-height:44px;padding:0 14px;border:1px solid #ffffff70;border-radius:24px;background:#fff;color:#142d3a}.newsletter-signup .newsletter-consent{display:flex;align-items:flex-start;gap:8px;color:#d4e9ed;font-size:11px;line-height:1.45}.newsletter-signup .newsletter-consent input{margin:2px 0 0;accent-color:#49c5d5}.newsletter-signup .btn{justify-self:start;background:#087eae}.newsletter-status{min-height:1em;font-size:12px!important}.site-footer .footer-grid{margin-bottom:10px}
+
+/* Service card images */
+.service-photo {
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  object-fit: cover;
+  object-position: center;
+  background-color: #06324b;
+}
+.service-card .ocean-photo {
+  background-size: 500% 200%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.service-card .op-photo {
+  border-radius: 0;
+  height: 100%;
+  min-height: 210px;
+}
+
+/* ===== TABLET ===== */
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-visual {
+    max-width: 540px;
+  }
+  .detail-columns {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+  .service-card {
+    grid-template-columns: 145px minmax(0, 1fr);
+  }
+  .categories {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ===== MOBILE (phones) ===== */
+/* ===== MOBILE (phones) ===== */
+@media (max-width: 680px) {
+
+  /* Hero */
+  .hero {
+    padding: 40px 0 32px;
+  }
+  .hero h1 {
+    font-size: clamp(30px, 8.5vw, 40px);
+    line-height: 1.15;
+  }
+  .hero-visual {
+    display: none;
   }
 
-  function safeUrl(raw) {
-    let s = String(raw || '').trim();
-    if (!s) return '';
-    if (s.startsWith('//')) {
-      s = 'https:' + s;
-    } else if (!/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[/#.?]/.test(s)) {
-      // no scheme: treat emails as mailto, everything else as an https website
-      s = (/^[^\s/@]+@[^\s/@]+\.[^\s/@]+$/.test(s) ? 'mailto:' : 'https://') + s;
-    }
-    try {
-      const u = new URL(s, location.origin);
-      return ['http:', 'https:', 'mailto:'].includes(u.protocol) ? u.href : '';
-    } catch (_) {
-      return '';
-    }
+  /* Opportunity cards */
+  .op-card-photo,
+  .op-photo {
+    height: 175px;
+  }
+  .op-card-body {
+    padding: 15px 16px 18px;
+  }
+  .op-card h3 {
+    font-size: 17.5px;
+    line-height: 1.3;
+  }
+  .card-description {
+    font-size: 13.5px;
   }
 
-  function endpoint(type) {
-    const base = String(cfg.API_URL || '').trim();
-    if (!/^https:\/\//i.test(base) || base.includes('PASTE_YOUR_')) {
-      throw new Error('Set the deployed Apps Script /exec URL in assets/config.js.');
-    }
-    const url = new URL(base);
-    if (type && type !== 'opportunities') url.searchParams.set('type', type);
-    return url.href;
+  /* Categories */
+  .categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
-  // ---- Feed cache: repeat visits load instantly and keep working if Apps Script is down ----
-  const CACHE_MS = 10 * 60 * 1000;   // reuse a saved copy for 10 minutes
-  function cacheGet(type) {
-    try {
-      const c = JSON.parse(localStorage.getItem('hobFeed:' + type) || 'null');
-      return c && Array.isArray(c.data) ? c : null;
-    } catch (_) { return null; }
+  /* Service cards */
+  .service-card,
+  .service-card-link {
+    grid-template-columns: 1fr;
   }
-  function cacheSet(type, data) {
-    try { localStorage.setItem('hobFeed:' + type, JSON.stringify({ t: Date.now(), data })); } catch (_) {}
+  .service-card .op-photo,
+  .service-card .ocean-photo,
+  .service-card .service-photo {
+    height: 155px;
+    min-height: 155px;
+    border-radius: 18px 18px 0 0;
   }
-  async function fetchFeed(type) {
-    const cached = cacheGet(type);
-    if (cached && Date.now() - cached.t < CACHE_MS) return cached.data;
-    try {
-      const data = await fetchFeedLive(type);
-      cacheSet(type, data);
-      return data;
-    } catch (e) {
-      if (cached) return cached.data;   // show the last good copy instead of an error
-      throw e;
-    }
+  .service-copy {
+    padding: 16px 18px 20px;
   }
 
-  async function fetchFeedLive(type) {
-    const url = endpoint(type);
-    const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    if (!Array.isArray(data)) throw new Error('The Apps Script endpoint did not return a JSON array.');
-
-    if (type !== 'opportunities') {
-      const isOpportunity = (r) => Boolean(
-        /scholar|grant|fellow|intern|training|undergraduate|\bjob\b/i.test(field(r, ['Category'])) ||
-        field(r, ['Funding and Benefits']) ||
-        field(r, ['Eligibility and Eligible Countries']) ||
-        field(r, ['Direct Application Link'])
-      );
-      if (data.some(isOpportunity)) {
-        throw new Error(`The ${type} endpoint returned opportunity listings. Check the Apps Script deployment and the matching sheet tab.`);
-      }
-      if (type === 'blueminutes') {
-        return data.filter((r) => isFeedRowPublished(r) &&
-          field(r, ['Title','Headline','Name','Fact Title','News Title']) &&
-          field(r, ['Content','Fact','Body','Summary','Description','News','Text','Blue Minute']));
-      }
-      if (type === 'stories') {
-        return data.filter((r) =>
-          field(r, ['Title','Story Title','Headline','Name','Beneficiary Name','Person Name']) &&
-          field(r, ['Story','Success Story','Testimonial','Story Text','Content','Description','Outcome','Message','Summary','Excerpt']));
-      }
-      if (type === 'services') {
-        return data.filter((r) =>
-          field(r, ['Title','Service Name','Name','Service']) &&
-          (field(r, ['Description','Summary','Details','Service Description','Content']) || field(r, ['URL','Link','Service URL','Website'])));
-      }
-      throw new Error(`Unsupported feed type: ${type}`);
-    }
-    return data;
+  /* Story / Minutes grids */
+  .story-grid,
+  .service-grid,
+  .minutes-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .story-photo {
+    height: 175px;
   }
 
-  function isFeedRowPublished(record) {
-    const status = field(record, ['Status','Publication Status','Review Status','Publication Status and Public Webpage Link']);
-    return !status || /^(active|published|live|approved|public|visible|yes|true)(\b|\s|[-|])/i.test(status);
+  /* Detail page */
+  .detail-hero {
+    min-height: 360px;
+    padding: 22px 16px;
+    align-items: flex-end;
+    border-radius: 18px;
+  }
+  .detail-hero h1 {
+    font-size: clamp(26px, 7.5vw, 34px);
+  }
+  .detail-summary {
+    font-size: 14.5px;
+  }
+  .detail-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .detail-side {
+    position: static;
+    order: -1; /* moves sidebar above content on mobile */
+    margin-bottom: 8px;
+  }
+  .detail-hero-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .detail-hero-actions .btn {
+    flex: 1 1 auto;
   }
 
-  function categoryLabel(raw) {
-    const t = String(raw || '').toLowerCase();
-    if (t.includes('undergraduate')) return 'Undergraduate opportunities';
-    if (t.includes('scholar')) return 'Scholarships';
-    if (t.includes('grant') || t.includes('funding') || t.includes('research')) return 'Grants';
-    if (t.includes('fellow')) return 'Fellowships';
-    if (t.includes('intern')) return 'Internships';
-    if (t.includes('blue economy') || (t.includes('blue') && t.includes('job')) || t.includes('career')) return 'Blue jobs';
-    if (t.includes('job')) return 'Jobs';
-    if (t.includes('training') || t.includes('sponsor')) return 'Trainings & sponsorships';
-    return raw || 'Opportunity';
+  /* Journey steps */
+  .journey {
+    gap: 4px;
+    padding: 12px 6px;
+    margin: 18px auto;
+  }
+  .journey-step {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 11px;
+    text-align: center;
+  }
+  .journey-line {
+    width: 7vw;
+    min-width: 18px;
   }
 
-  function recordId(r) {
-    return field(r, API_FIELDS.id) || `${field(r, API_FIELDS.title)}|${field(r, API_FIELDS.org)}`;
+  /* Newsletter */
+  .newsletter-signup {
+    grid-template-columns: 1fr;
+    padding: 22px 18px;
+    gap: 18px;
+  }
+  .newsletter-signup h2 {
+    font-size: 21px;
   }
 
-  function slug(r) {
-    const supplied = field(r, API_FIELDS.slug);
-    if (supplied) return supplied.toLowerCase();
-    return field(r, API_FIELDS.title)
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+  /* Brand */
+  .brand-logo {
+    height: 34px;
+    width: auto;
+  }
+  .site-footer .brand-logo {
+    height: 44px;
+    width: auto;
   }
 
-  function detailUrl(r) {
-    const s = slug(r);
-    return s ? `/opportunity/${encodeURIComponent(s)}/` : `/opportunity/?id=${encodeURIComponent(recordId(r))}`;
+  /* General spacing */
+  .ocean-page-hero {
+    padding: 32px 0;
+  }
+}
+
+
+/* ===== Improved Service Cards ===== */
+.service-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: stretch;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.service-card-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px #062d4022;
+}
+
+.service-card .text-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #087eae;
+  font-weight: 750;
+  font-size: 14px;
+}
+
+.service-card .text-link.is-disabled {
+  color: #8a9ba3;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Make sure images fill the left side properly */
+.service-card .op-photo,
+.service-card .ocean-photo,
+.service-card .service-photo {
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  object-fit: cover;
+  object-position: center;
+  background-color: #06324b;
+}
+
+/* Mobile */
+@media (max-width: 680px) {
+  .service-card,
+  .service-card-link {
+    grid-template-columns: 1fr;
   }
 
-  // ---- Ocean images: stable per record + real Image URL support ----
-  const SCENE_COUNT = 10;
-  const SCENE_WINDOW = 6;
-  let recentScenes = [];
-
-  function resetScenes() {
-    recentScenes = [];
+  .service-card .op-photo,
+  .service-card .ocean-photo,
+  .service-card .service-photo {
+    height: 160px;
+    min-height: 160px;
+    border-radius: 19px 19px 0 0;
   }
 
-  function imageIndex(record) {
-    const key = recordId(record) || field(record, API_FIELDS.title) || 'hob';
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) {
-      hash = (hash * 33 + key.charCodeAt(i)) | 0;
-    }
-    const preferred = Math.abs(hash) % SCENE_COUNT;
-    const nearby = recentScenes.slice(-SCENE_WINDOW);
-    const used = new Set(recentScenes);
 
-    for (let step = 0; step < SCENE_COUNT; step++) {
-      const candidate = (preferred + step) % SCENE_COUNT;
-      if (!used.has(candidate) && !nearby.includes(candidate)) {
-        recentScenes.push(candidate);
-        return candidate;
-      }
-    }
-
-    for (let step = 0; step < SCENE_COUNT; step++) {
-      const candidate = (preferred + step) % SCENE_COUNT;
-      if (!nearby.includes(candidate)) {
-        recentScenes.push(candidate);
-        return candidate;
-      }
-    }
-
-    recentScenes.push(preferred);
-    return preferred;
-  }
-
-  function scene(record, extra) {
-    const title = field(record, API_FIELDS.title) || 'Opportunity';
-    const alt = `${title} — opportunity image`;
-    const imageUrl = safeUrl(field(record, API_FIELDS.image));
-    const extraClass = extra ? ` ${extra}` : '';
-
-    if (imageUrl) {
-      return `<img class="op-photo${extraClass}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">`;
-    }
-
-    const n = imageIndex(record);
-    return `<div class="ocean-photo scene-${n}${extraClass}" role="img" aria-label="${escapeHtml(alt)}"></div>`;
-  }
-  // ---- end image block ----
-
-  function savedIds() {
-    try {
-      return JSON.parse(localStorage.getItem('hobSavedOpportunities') || '[]');
-    } catch (_) {
-      return [];
-    }
-  }
-
-  function toggleSaved(id) {
-    const current = savedIds();
-    const next = current.includes(id) ? current.filter((x) => x !== id) : current.concat(id);
-    localStorage.setItem('hobSavedOpportunities', JSON.stringify(next));
-    renderOpportunityViews();
-  }
-
-  function bindSaves(root = document) {
-    $$('[data-save]', root).forEach((b) => b.addEventListener('click', () => toggleSaved(b.dataset.save)));
-  }
-
-  function cleanListingText(text) {
-    const s = String(text || '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').trim();
-    if (!s) return '';
-    const low = s.toLowerCase();
-    const signals = ['close menu home', 'search asia africa', 'deadlines approaching', 'join our mailing list', 'privacy policy disclaimer contact', 'od live series young person'];
-    if (signals.some((x) => low.includes(x))) return '';
-    const words = low.match(/[a-z]{3,}/g) || [];
-    const navWords = ['home','scholarships','fellowships','jobs','internships','search','contact','grants','blog','specials'];
-    if (words.length > 36 && navWords.filter((w) => words.filter((x) => x === w).length >= 3).length >= 3) return '';
-    return s;
-  }
-
-  function generatedGuide(text) {
-    const t = String(text || '').toLowerCase();
-    return /(?:^|\n)\s*(overview|eligibility|funding(?: and benefits)?|qualifications|documents|application steps|how to apply)\s*:/m.test(t) ||
-      (t.includes('overview:') && t.includes('eligibility:') && t.includes('funding and benefits:'));
-  }
-
-  function guideIsRepeated(guide, sections) {
-    const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-    const g = normalize(guide);
-    if (!g) return true;
-    const sourceParts = sections.map(normalize).filter((s) => s.length > 28);
-    return sourceParts.some((s) => g === s || g.includes(s));
-  }
-
-  function card(r) {
-    const id = recordId(r);
-    const saved = savedIds().includes(id);
-    const title = field(r, API_FIELDS.title) || 'Opportunity';
-    const cat = categoryLabel(field(r, API_FIELDS.cat));
-    const desc = cleanListingText(field(r, API_FIELDS.caption)) || 'Open the listing to review eligibility and official application information.';
-    const org = field(r, API_FIELDS.org);
-    const deadline = field(r, API_FIELDS.deadline) || 'See official page';
-
-    return `<article class="op-card">
-      ${scene(r, 'op-card-photo')}
-      <div class="op-card-body">
-        <div class="card-topline">
-          <span class="tag">${escapeHtml(cat)}</span>
-          <span class="mini-wave" aria-hidden="true">〰</span>
-        </div>
-        <h3><a href="${detailUrl(r)}">${escapeHtml(title)}</a></h3>
-        ${org ? `<p class="card-org">${escapeHtml(org)}</p>` : ''}
-        <p class="card-description">${escapeHtml(desc.slice(0, 190))}${desc.length > 190 ? '…' : ''}</p>
-        <div class="card-meta"><span>◷ ${escapeHtml(deadline)}</span></div>
-        <div class="card-actions">
-          <a class="text-link" href="${detailUrl(r)}">View opportunity <span aria-hidden="true">→</span></a>
-          <button class="save-btn ${saved ? 'saved' : ''}" type="button" data-save="${escapeHtml(id)}" aria-label="${saved ? 'Remove saved opportunity' : 'Save opportunity'}">
-            ${saved ? '♥ Saved' : '♡ Save'}
-          </button>
-        </div>
-      </div>
-    </article>`;
-  }
-
-  function draw(target, rows, empty) {
-    if (!target) return;
-    resetScenes();
-    target.innerHTML = rows.length
-      ? rows.map(card).join('')
-      : `<div class="empty">${escapeHtml(empty || 'No published opportunities are available yet.')}</div>`;
-    bindSaves(target);
-  }
-
-  function publicFields(record) {
-    const sections = [
-      ['Eligibility & eligible countries', cleanListingText(field(record, API_FIELDS.eligibility)), '◎'],
-      ['Funding & benefits', cleanListingText(field(record, API_FIELDS.funding)), '✦'],
-      ['Required qualifications', cleanListingText(field(record, API_FIELDS.qualifications)), '✓'],
-      ['Required documents', cleanListingText(field(record, API_FIELDS.documents)), '▤'],
-      ['How to apply', cleanListingText(field(record, API_FIELDS.steps)), '→']
-    ];
-    const guide = cleanListingText(field(record, API_FIELDS.guide));
-    const guideExtra = guide && !generatedGuide(guide) && !guideIsRepeated(guide, sections.map((x) => x[1]))
-      ? `<details class="guide-toggle"><summary>Read the full opportunity guide</summary><div class="section-copy">${escapeHtml(guide)}</div></details>`
-      : '';
-    return sections
-      .filter((x) => x[1])
-      .map(([label, text, icon]) => `
-        <section class="opportunity-section">
-          <span class="section-icon" aria-hidden="true">${icon}</span>
-          <div>
-            <h2>${escapeHtml(label)}</h2>
-            <div class="section-copy">${escapeHtml(text)}</div>
-          </div>
-        </section>`)
-      .join('') + guideExtra;
-  }
-
-  function renderDetail() {
-    const root = $('#detailRoot');
-    if (!root) return;
-
-    const p = new URLSearchParams(location.search);
-    const id = p.get('id');
-    let pathSlug = '';
-    const pathMatch = location.pathname.match(/^\/opportunity\/([^/]+)\/?$/i);
-    if (pathMatch) {
-      try { pathSlug = decodeURIComponent(pathMatch[1]); }
-      catch (_) { pathSlug = pathMatch[1]; }
-    }
-    const querySlug = p.get('slug') || pathSlug;
-
-    const record = state.opportunities.find((r) =>
-      (id && recordId(r) === id) || (querySlug && slug(r) === querySlug)
-    );
-
-    if (!record) {
-      root.innerHTML = '<div class="empty">This opportunity is unavailable or has been closed. <a href="/opportunities/">Browse current opportunities.</a></div>';
-      return;
-    }
-
-    const title = field(record, API_FIELDS.title) || 'Opportunity details';
-    const category = categoryLabel(field(record, API_FIELDS.cat));
-    const deadline = field(record, API_FIELDS.deadline) || 'Check the official page';
-    const summary = cleanListingText(field(record, ['Webpage Caption', 'Short Caption']));
-    const app = safeUrl(field(record, API_FIELDS.apply));
-    const official = safeUrl(field(record, API_FIELDS.official));
-    const apply = app || official;
-    const applyLabel = apply && apply.toLowerCase().startsWith('mailto:') ? 'Email to apply ↗' : 'Apply on official website ↗';
-    const source = official
-      ? `<a class="source-link" href="${escapeHtml(official)}" target="_blank" rel="noopener noreferrer">Official opportunity page ↗</a>`
-      : '';
-
-    resetScenes();
-
-    root.innerHTML = `
-      <div class="detail-shell">
-        <div class="detail-breadcrumb">
-          <a href="/opportunities/">Opportunities</a><span>›</span><span>${escapeHtml(category)}</span>
-        </div>
-        <section class="detail-hero">
-          ${scene(record, 'detail-photo')}
-          <div class="detail-hero-shade"></div>
-          <div class="detail-hero-copy">
-            <span class="tag">${escapeHtml(category)}</span>
-            <h1>${escapeHtml(title)}</h1>
-            <p class="provider">${escapeHtml(field(record, API_FIELDS.org))}</p>
-            ${summary ? `<p class="detail-summary">${escapeHtml(summary)}</p>` : ''}
-            <div class="detail-chips">
-              <span>◷ ${escapeHtml(deadline)}</span>
-              <span>✦ HOB opportunity</span>
-            </div>
-            <div class="detail-hero-actions">
-              ${apply
-                ? `<a class="btn apply-btn" href="${escapeHtml(apply)}" target="_blank" rel="noopener noreferrer">${applyLabel}</a>`
-                : '<span class="btn apply-btn is-disabled" aria-disabled="true">Application link unavailable</span>'}
-              <button class="save-btn detail-save ${savedIds().includes(recordId(record)) ? 'saved' : ''}" data-save="${escapeHtml(recordId(record))}">
-                ${savedIds().includes(recordId(record)) ? '♥ Saved' : '♡ Save'}
-              </button>
-            </div>
-          </div>
-        </section>
-        <div class="journey" aria-label="Application journey">
-          <div class="journey-step current"><i>01</i><span>Explore</span></div>
-          <span class="journey-line"></span>
-          <div class="journey-step"><i>02</i><span>Prepare</span></div>
-          <span class="journey-line"></span>
-          <div class="journey-step"><i>03</i><span>Apply</span></div>
-        </div>
-        <div class="detail-columns">
-          <article class="detail-main">
-            ${publicFields(record) || '<div class="empty">More information is available on the official opportunity page.</div>'}
-          </article>
-          <aside class="detail-side">
-            <div class="verified-label">
-              <span>✓</span>
-              <div>
-                <strong>Verified by Hands on Blue</strong>
-                <small>This opportunity has been reviewed for accuracy. Always confirm the latest details on the official page before applying.</small>
-              </div>
-            </div>
-            <div class="side-fact">
-              <span>Category</span>
-              <strong>${escapeHtml(category)}</strong>
-            </div>
-            ${source}
-          </aside>
-        </div>
-      </div>`;
-
-    document.title = `${title} | HOB Opportunities`;
-    const canonical = $('link[rel="canonical"]');
-    if (canonical) canonical.href = `${cfg.DOMAIN || location.origin}${detailUrl(record)}`;
-    const ogTitle = $('meta[property="og:title"]');
-    if (ogTitle) ogTitle.content = `${title} | HOB Opportunities`;
-    bindSaves(root);
-  }
-
-  function renderOpportunityViews() {
-    const all = state.opportunities;
-
-    // Hero trust line: live count of verified listings
-    const trust = $('#heroTrust');
-    if (trust && all.length) {
-      const latest = all.map((r) => field(r, API_FIELDS.added)).filter(Boolean).sort().pop();
-      const d = latest ? new Date(latest) : null;
-      const when = d && !isNaN(d) ? ` · latest added ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
-      trust.textContent = `✓ ${all.length} verified opportunities${when}`;
-    }
-
-    draw($('#featuredCards'), all.slice(0, 6), 'New verified opportunities will appear here.');
-    draw($('#directoryCards'), filteredOpportunities(), 'No opportunities match those filters.');
-    draw($('#categoryCards'), filteredOpportunities(), 'No opportunities in this category yet.');
-    draw($('#savedCards'), all.filter((r) => savedIds().includes(recordId(r))), 'Save an opportunity and it will appear here.');
-
-    const count = $('#resultsCount');
-    if (count) count.textContent = `${filteredOpportunities().length} opportunities found`;
-
-    const categoryHeading = $('#categoryHeading');
-    if (categoryHeading) categoryHeading.textContent = new URLSearchParams(location.search).get('name') || 'All categories';
-
-    renderDetail();
-  }
-
-  function filteredOpportunities() {
-    const q = ($('#dirSearch')?.value || new URLSearchParams(location.search).get('q') || '').trim().toLowerCase();
-    const cat = ($('#dirCategory')?.value || new URLSearchParams(location.search).get('name') || '').trim().toLowerCase();
-    const country = ($('#dirCountry')?.value || '').trim().toLowerCase();
-    const funding = ($('#dirFunding')?.value || '').trim().toLowerCase();
-
-    return state.opportunities.filter((r) => {
-      const text = [
-        field(r, API_FIELDS.title),
-        field(r, API_FIELDS.org),
-        field(r, API_FIELDS.cat),
-        field(r, ['Webpage Caption', 'Short Caption']),
-        field(r, API_FIELDS.eligibility),
-        field(r, API_FIELDS.funding)
-      ].join(' ').toLowerCase();
-
-      const category = categoryLabel(field(r, API_FIELDS.cat)).toLowerCase();
-
-      return (!q || text.includes(q)) &&
-             (!cat || category === categoryLabel(cat).toLowerCase() || text.includes(cat)) &&
-             (!country || field(r, API_FIELDS.eligibility).toLowerCase().includes(country)) &&
-             (!funding || field(r, API_FIELDS.funding).toLowerCase().includes(funding));
-    });
-  }
-
-  function storyTitle(r) {
-    return field(r, ['Title', 'Story Title', 'Headline', 'Name', 'Beneficiary Name', 'Person Name']) || 'A HOB community story';
-  }
-
-  function storyBody(r) {
-    return field(r, ['Story', 'Success Story', 'Testimonial', 'Story Text', 'Content', 'Description', 'Outcome', 'Message']);
-  }
-
-  function storyCard(r) {
-    const person = field(r, ['Name', 'Person Name', 'Beneficiary Name', 'Author']);
-    const opportunity = field(r, ['Opportunity', 'Opportunity Title', 'Programme', 'Program']);
-    const body = storyBody(r);
-    const photo = scene({ ID: field(r, ['ID']) || storyTitle(r), Title: storyTitle(r) }, 'story-photo');
-
-    return `<article class="story-card">
-      ${photo}
-      <div class="story-card-copy">
-        <span class="story-mark" aria-hidden="true">“</span>
-        <h2>${escapeHtml(storyTitle(r))}</h2>
-        ${person ? `<p class="story-byline">${escapeHtml(person)}${field(r, ['Country']) ? ` · ${escapeHtml(field(r, ['Country']))}` : ''}</p>` : ''}
-        ${opportunity ? `<p class="story-opportunity">${escapeHtml(opportunity)}</p>` : ''}
-        <p>${escapeHtml(body || field(r, ['Summary', 'Excerpt']) || 'A story from the HOB community.')}</p>
-      </div>
-    </article>`;
-  }
-
-  function renderStories() {
-    const target = $('#storiesCards');
-    if (!target) return;
-    resetScenes();
-    target.innerHTML = state.stories.length
-      ? state.stories.map(storyCard).join('')
-      : `<div class="empty"><strong>Success stories are coming soon.</strong><br>When published by HOB, they will appear here.</div>`;
-  }
-
-  function serviceTitle(r) {
-    return field(r, ['Title', 'Service Name', 'Name', 'Service']) || 'HOB service';
-  }
-
-  function renderServices() {
-    const target = $('#servicesCards');
-    if (!target) return;
-    resetScenes();
-
-    if (state.errors.services) {
-      target.innerHTML = '<div class="empty"><strong>Services could not be loaded right now.</strong><br>Please try again in a few minutes.</div>';
-      return;
-    }
-
-    if (!state.services.length) {
-      target.innerHTML = '<div class="empty">No active services are listed yet.</div>';
-      return;
-    }
-
-    target.innerHTML = state.services.map((r) => {
-      const title = serviceTitle(r);
-      const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
-      const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
-      const photo = scene(r, 'service-photo');
-
-      // Whole card becomes clickable if a URL exists
-      if (url) {
-        return `
-          <a href="${escapeHtml(url)}" class="service-card service-card-link" target="_blank" rel="noopener noreferrer">
-            ${photo}
-            <div class="service-copy">
-              <span class="tag">Hands on Blue</span>
-              <h2>${escapeHtml(title)}</h2>
-              <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
-              <span class="text-link">Learn more <span aria-hidden="true">↗</span></span>
-            </div>
-          </a>`;
-      }
-
-      // No URL – show card without link
-      return `
-        <article class="service-card">
-          ${photo}
-          <div class="service-copy">
-            <span class="tag">Hands on Blue</span>
-            <h2>${escapeHtml(title)}</h2>
-            <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
-            <span class="text-link is-disabled">Link coming soon</span>
-          </div>
-        </article>`;
-    }).join('');
-  }
-
-  function minuteTitle(r) {
-    return field(r, ['Title', 'Headline', 'Name', 'Fact Title', 'News Title']) || 'Blue Minute';
-  }
-
-  function minuteDate(r) {
-    return field(r, ['Date', 'Published Date', 'Date Published', 'Date Added', 'Timestamp']);
-  }
-
-  function minuteBody(r) {
-    return field(r, ['Content', 'Fact', 'Body', 'Summary', 'Description', 'News', 'Text', 'Blue Minute'])
-      .replace(/\s*Read more:\s*https?:\/\/\S+/gi, '')
-      .trim();
-  }
-
-  function minuteCard(r) {
-    const body = minuteBody(r);
-    return `<article class="minute-card">
-      <div class="minute-icon" aria-hidden="true">🌊</div>
-      <div class="minute-copy">
-        <div class="minute-meta">${escapeHtml(minuteDate(r) || 'BLUE MINUTE')}</div>
-        <h2>${escapeHtml(minuteTitle(r))}</h2>
-        <p>${escapeHtml(body || 'A new ocean fact or story from HOB.')}</p>
-      </div>
-    </article>`;
-  }
-
-  function renderMinutes() {
-    const target = $('#minutesCards');
-    if (!target) return;
-    const items = state.blueMinutes.length ? state.blueMinutes : LOCAL_FACTS;
-    target.innerHTML = items.map(minuteCard).join('');
-  }
-
-  function nextBlueMinute() {
-    const feed = state.blueMinutes.length ? state.blueMinutes : LOCAL_FACTS;
-    const day = Math.floor(Date.now() / 86400000);
-    let cursor = 0;
-    try {
-      cursor = Number(localStorage.getItem('hobBlueMinuteCursor') || 0) || 0;
-      localStorage.setItem('hobBlueMinuteCursor', String(cursor + 1));
-    } catch (_) {}
-    return feed[((day + cursor) % feed.length + feed.length) % feed.length];
-  }
-
-  function showBlueMinute(dialog, item) {
-    dialog.querySelector('.blue-minute-title').textContent = minuteTitle(item);
-    dialog.querySelector('.blue-minute-fact').textContent = minuteBody(item);
-    if (!dialog.open) {
-      if (typeof dialog.showModal === 'function') dialog.showModal();
-      else dialog.setAttribute('open', '');
-    }
-  }
-
-  function setupBlueMinuteDialog() {
-    let dialog = $('#blueMinuteDialog');
-    if (!dialog || !$('.blue-minute-modal', dialog)) {
-      if (dialog) dialog.remove();
-      dialog = document.createElement('dialog');
-      dialog.id = 'blueMinuteDialog';
-      dialog.className = 'blue-minute-dialog';
-      dialog.innerHTML = `
-        <div class="blue-minute-modal">
-          <button class="blue-minute-close" type="button" aria-label="Close">×</button>
-          <span class="blue-minute-kicker">HOB · BLUE MINUTE</span>
-          <h2 class="blue-minute-title"></h2>
-          <p class="blue-minute-fact"></p>
-          <p class="blue-minute-note">A little ocean knowledge, shared by Hands on Blue.</p>
-        </div>`;
-      document.body.appendChild(dialog);
-    }
-
-    dialog.querySelector('.blue-minute-close').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
-
-    $$('[data-blue-minute]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        button.disabled = true;
-        let items = state.blueMinutes;
-        if (!items.length) {
-          try {
-            items = await fetchFeed('blueminutes');
-            state.blueMinutes = items;
-          } catch (_) {
-            items = [];
-          }
-        }
-        if (!items.length) state.blueMinutes = [];
-        showBlueMinute(dialog, nextBlueMinute());
-        button.disabled = false;
-      });
-    });
-
-    const isHome = location.pathname === '/' || location.pathname === '/index.html';
-    if (isHome) {
-      const openOnce = () => {
-        try {
-          if (sessionStorage.getItem('hobBlueMinuteShown')) return;
-          sessionStorage.setItem('hobBlueMinuteShown', '1');
-        } catch (_) {}
-        showBlueMinute(dialog, nextBlueMinute());
-      };
-      window.hobOpenBlueMinuteWhenReady = openOnce;
-    }
-  }
-
-  function setupNav() {
-    const nav = $('#navLinks');
-    if (nav) {
-      nav.innerHTML = `
-        <a href="/opportunities/">Browse</a>
-        <a href="/category/">Categories</a>
-        <a href="/services/">Services</a>
-        <a href="/blue-minutes/">Blue Minutes</a>
-        <a href="/stories/">Success Stories</a>
-        <a href="/submit/">Submit</a>
-        <a class="btn small" href="/contact/">Contact HOB</a>`;
-      const active = location.pathname;
-      $$('a', nav).forEach((a) => {
-        if (a.getAttribute('href') === active) a.setAttribute('aria-current', 'page');
-      });
-    }
-
-    const menu = $('#menuToggle');
-    if (menu && nav) {
-      menu.addEventListener('click', () => {
-        const open = nav.classList.toggle('open');
-        menu.setAttribute('aria-expanded', String(open));
-      });
-    }
-
-    $$('#year').forEach((el) => (el.textContent = String(new Date().getFullYear())));
-  }
-
-  function setupFooter() {
-    const footer = $('footer.site-footer');
-    if (!footer) return;
-
-    footer.innerHTML = `
-      <div class="wrap">
-        <div class="footer-grid">
-          <div>
-            <a class="brand footer-brand" href="/">
-              <img class="brand-logo" src="/assets/hob-logo-horizontal-light.png?v=20261102-logo3" alt="Hands on Blue Ocean Conservation Trust">
-            </a>
-            <p>Discover opportunities for growth, connected to a healthier blue world.</p>
-          </div>
-          <div>
-            <h3>Explore</h3>
-            <div class="footer-links">
-              <a href="/opportunities/">All opportunities</a>
-              <a href="/category/">Browse categories</a>
-              <a href="/services/">Services</a>
-              <a href="/submit/">Submit an opportunity</a>
-            </div>
-          </div>
-          <div>
-            <h3>Ocean & community</h3>
-            <div class="footer-links">
-              <a href="/stories/">Success stories</a>
-              <a href="/blue-minutes/">Blue Minutes</a>
-              <a href="/about/">About HOB</a>
-              <a href="/contact/">Contact</a>
-            </div>
-          </div>
-        </div>
-        <section class="newsletter-signup">
-          <div>
-            <span class="eyebrow">HOB NOTES</span>
-            <h2>Good opportunities, straight to your inbox.</h2>
-            <p>Sign up for occasional updates from Hands on Blue. We’ll only use your email for HOB updates.</p>
-          </div>
-          <form data-newsletter-form>
-            <label class="sr-only" for="newsletterEmail">Email address</label>
-            <input id="newsletterEmail" name="email" type="email" autocomplete="email" placeholder="Your email address" required>
-            <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <label class="newsletter-consent">
-              <input type="checkbox" name="consent" required> I agree to receive email updates from HOB.
-            </label>
-            <button class="btn" type="submit">Subscribe</button>
-            <p class="newsletter-status" aria-live="polite"></p>
-          </form>
-        </section>
-        <div class="copyright">
-          <span>© <span id="year"></span> HOB Opportunities</span>
-          <span>Confirm opportunity details with the official provider.</span>
-        </div>
-      </div>`;
-
-    const year = $('#year', footer);
-    if (year) year.textContent = String(new Date().getFullYear());
-  }
-
-  function setupFilters() {
-    ['#dirSearch', '#dirCategory', '#dirCountry', '#dirFunding'].forEach((sel) => {
-      const el = $(sel);
-      if (el) el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', renderOpportunityViews);
-    });
-
-    const q = new URLSearchParams(location.search).get('q');
-    if (q && $('#dirSearch')) $('#dirSearch').value = q;
-
-    const name = new URLSearchParams(location.search).get('name');
-    if (name && $('#dirCategory')) $('#dirCategory').value = categoryLabel(name);
-
-    const form = $('#homeSearch');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        location.href = `/opportunities/?q=${encodeURIComponent($('#homeSearchInput')?.value || '')}`;
-      });
-    }
-  }
-
-  function setupNewsletter() {
-    $$('[data-newsletter-form]').forEach((form) => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const status = $('.newsletter-status', form);
-        const button = $('button[type="submit"]', form);
-        const email = $('input[name="email"]', form)?.value.trim();
-        const consent = $('input[name="consent"]', form)?.checked;
-        const trap = $('input[name="website"]', form)?.value || '';
-        if (trap) { form.reset(); if (status) status.textContent = 'Thanks — you’re on the list.'; return; }   // spam trap
-
-        if (!email || !consent) {
-          if (status) status.textContent = 'Enter your email and confirm consent to subscribe.';
-          return;
-        }
-        if (!cfg.API_URL) {
-          if (status) status.textContent = 'Newsletter signup is temporarily unavailable.';
-          return;
-        }
-
-        button.disabled = true;
-        if (status) status.textContent = 'Sending…';
-
-        try {
-          await fetch(cfg.API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-            body: JSON.stringify({ email, consent: true, website: trap, source: 'HOB website newsletter' })
-          });
-          form.reset();
-          if (status) status.textContent = 'Thanks — you’re on the list. We’ll only use your email for HOB updates.';
-        } catch (_) {
-          if (status) status.textContent = 'We could not send that just now. Please try again later.';
-        } finally {
-          button.disabled = false;
-        }
-      });
-    });
-  }
-
-  // ---- Homepage hero slider: photos slide across behind the headline; dots jump to a slide ----
-  // Add more wide photos to this list (at least 1920px across; for Unsplash links use w=1920).
-  // With only one image the hero stays static, exactly as it is now.
-  const HERO_IMAGES = [
-    'https://images.unsplash.com/photo-1779122626135-5efe7112ad24?w=1920&auto=format&fit=crop&q=70&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D',
-    'https://images.unsplash.com/photo-1584306758710-7b452b379187?w=1920&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1568785629399-0cd9324febdf?w=1920&auto=format&fit=crop&q=70'
-  ];
-
-  function imageUrl(raw) {
-    return safeUrl(raw);
-  }
-
-  function cssUrl(u) {
-    return String(u).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\n\r]/g, '');
-  }
-
-  const HERO_COPY = [
-    {
-      eyebrow: 'A platform by Hands on Blue',
-      title: 'Global opportunities for a healthier blue world.',
-      text: 'Discover scholarships, grants, fellowships, blue economy jobs and more from trusted sources.'
-    },
-    {
-      eyebrow: 'Funding and learning',
-      title: 'Find scholarships and grants that fit your next step.',
-      text: 'Browse verified funding opportunities from trusted providers around the world.'
-    },
-    {
-      eyebrow: 'Careers in the blue economy',
-      title: 'Build a career that protects our oceans.',
-      text: 'Explore jobs, internships and fellowships in the blue economy.'
-    }
-  ];
-
-  function setupHeroSlider() {
-    const hero = $('.hero');
-    const urls = HERO_IMAGES.map(imageUrl).filter(Boolean);
-    if (!hero || urls.length < 2) return;
-    const n = urls.length, delay = 6000;
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    hero.classList.add('hero--slider');
-
-    const copyEls = {
-      eyebrow: $('.hero-grid .eyebrow', hero),
-      title: $('.hero-grid h1', hero),
-      text: $('.hero-grid h1 ~ p', hero)
-    };
-    const copyList = Object.values(copyEls).filter(Boolean);
-    copyList.forEach((el) => el.classList.add('hero-copy'));
-    let lastCopy = 0, copyTimer = null;
-
-    function setCopy(i) {
-      const c = HERO_COPY[i];
-      if (!c || !copyEls.title || i === lastCopy) return;
-      lastCopy = i;
-      copyList.forEach((el) => el.classList.add('hero-copy-out'));   // fade out
-      clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => {
-        if (copyEls.eyebrow) copyEls.eyebrow.textContent = c.eyebrow;
-        copyEls.title.textContent = c.title;
-        if (copyEls.text) copyEls.text.textContent = c.text;
-        copyList.forEach((el) => el.classList.remove('hero-copy-out')); // fade in
-      }, 300);
-    }
-
-    const view = document.createElement('div'); view.className = 'hero-slides'; view.setAttribute('aria-hidden', 'true');
-    const track = document.createElement('div'); track.className = 'hero-track';
-    urls.concat(urls[0]).forEach((u) => {            // the extra copy of slide 1 makes the loop seamless
-      const s = document.createElement('div'); s.className = 'hero-slide';
-      s.style.backgroundImage = `url('${cssUrl(u)}')`; track.appendChild(s);
-    });
-    view.appendChild(track); hero.insertBefore(view, hero.firstChild);
-
-    const dots = document.createElement('div'); dots.className = 'hero-dots';
-    dots.setAttribute('role', 'group'); dots.setAttribute('aria-label', 'Hero image slides');
-    const buttons = urls.map((_, i) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'hero-dot';
-      b.setAttribute('aria-label', `Show image ${i + 1} of ${n}`);
-      b.addEventListener('click', () => { if (!busy) { go(i); restart(); } });
-      dots.appendChild(b); return b;
-    });
-    hero.appendChild(dots);
-
-    let index = 0, busy = false, timer = null;
-
-    // Pause / play control (accessibility)
-    let paused = false;
-    if (!reduce) {
-      const pauseBtn = document.createElement('button');
-      pauseBtn.type = 'button';
-      pauseBtn.className = 'hero-pause';
-      pauseBtn.innerHTML = '❚❚';
-      pauseBtn.setAttribute('aria-label', 'Pause slideshow');
-      pauseBtn.addEventListener('click', () => {
-        paused = !paused;
-        pauseBtn.innerHTML = paused ? '▶' : '❚❚';
-        pauseBtn.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
-        if (paused) stop(); else start();
-      });
-      dots.appendChild(pauseBtn);
-    }
-
-    function paint() {
-      buttons.forEach((b, i) => {
-        const on = i === index % n;
-        b.classList.toggle('is-active', on);
-        if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
-      });
-      setCopy(index % n);
-    }
-    function go(i, instant) {
-      index = i;
-      track.style.transition = instant ? 'none' : '';
-      track.style.transform = `translateX(-${index * 100}%)`;
-      if (instant) { void track.offsetWidth; track.style.transition = ''; }
-      paint();
-    }
-    function next() {
-      if (busy) return;
-      if (index >= n - 1) {                           // slide on to the copy of slide 1, then jump back to the real one
-        busy = true; go(n);
-        setTimeout(() => { go(0, true); busy = false; }, 1000);
-      } else go(index + 1);
-    }
-    function prev() {
-      if (busy) return;
-      if (index <= 0) go(n, true);                    // jump to the copy first, then slide back one
-      go(index - 1);
-    }
-    function start() { if (!reduce && !paused && !timer) timer = setInterval(next, delay); }
-    function stop() { clearInterval(timer); timer = null; }
-    function restart() { stop(); start(); }
-
-    hero.addEventListener('mouseenter', stop); hero.addEventListener('mouseleave', start);
-    hero.addEventListener('focusin', stop); hero.addEventListener('focusout', start);
-    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
-    let x0 = null;                                    // swipe on phones
-    hero.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
-    hero.addEventListener('touchend', (e) => {
-      if (x0 == null) return;
-      const dx = e.changedTouches[0].clientX - x0; x0 = null;
-      if (Math.abs(dx) < 50) return;
-      if (dx < 0) next(); else prev();
-      restart();
-    });
-    go(0, true); start();
-  }
-
-  async function init() {
-    document.body.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
-    setupNav();
-    setupFooter();
-    setupBlueMinuteDialog();
-    setupFilters();
-    setupNewsletter();
-    try { setupHeroSlider(); } catch (e) { console.error('Hero slider failed', e); }
-
-    const isHome = location.pathname === '/' || location.pathname === '/index.html';
-
-    if ($('#minutesCards') || isHome) {
-      try {
-        state.blueMinutes = await fetchFeed('blueminutes');
-      } catch (e) {
-        state.errors.blueMinutes = e.message;
-        state.blueMinutes = [];
-      }
-      renderMinutes();
-
-      if (isHome && window.hobOpenBlueMinuteWhenReady) {
-        let seen = false;
-        try { seen = !!sessionStorage.getItem('hobBlueMinuteShown'); } catch (_) {}
-        if (!seen) window.setTimeout(window.hobOpenBlueMinuteWhenReady, 900);
-      }
-    }
-
-    if ($('#featuredCards') || $('#directoryCards') || $('#categoryCards') || $('#savedCards') || $('#detailRoot')) {
-      try {
-        state.opportunities = await fetchFeed('opportunities');
-      } catch (e) {
-        state.errors.opportunities = e.message;
-      }
-
-      if (state.errors.opportunities) {
-        const n = '<div class="notice">Opportunity listings are temporarily unavailable. Please try again soon.</div>';
-        ['#featuredCards', '#directoryCards', '#categoryCards', '#savedCards', '#detailRoot'].forEach((s) => {
-          const el = $(s);
-          if (el) el.innerHTML = n;
-        });
-      } else {
-        renderOpportunityViews();
-      }
-    }
-
-    if ($('#storiesCards')) {
-      try {
-        state.stories = await fetchFeed('stories');
-      } catch (e) {
-        state.errors.stories = e.message;
-      }
-      renderStories();
-    }
-
-    if ($('#servicesCards')) {
-      try {
-        state.services = await fetchFeed('services');
-      } catch (e) {
-        state.errors.services = e.message;
-      }
-      renderServices();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
-})();
+  /* ===== Loading & Empty States ===== */
+.loading-state,
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: #5a707b;
+  background: #f8fbfc;
+  border: 1px dashed #d0e3e8;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.loading-state {
+  color: #087eae;
+  font-weight: 600;
+}
+
+.empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #062c42;
+  font-size: 17px;
+}
+
+.empty a {
+  color: #087eae;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+  .verified-label {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.verified-label > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dff7ea;
+  color: #168253;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.verified-label strong {
+  display: block;
+  font-size: 14.5px;
+  color: #062c42;
+  margin-bottom: 3px;
+}
+
+.verified-label small {
+  display: block;
+  color: #5a707b;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.empty a:hover {
+  text-decoration: underline;
+}
+}
+
+
+/* ===== Category tile images (replace the sprite crops) ===== */
+.categories .category-card.category-card[href*="scholar" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1623461487986-9400110de28e?w=600&auto=format&fit=crop&q=60');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="grant" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1603796846097-bee99e4a601f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="fellow" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1569292567777-e5d61a759322?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="intern" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1660795307991-f9d5254a139c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="blue" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1768345074312-0a03978a9eb1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="undergrad" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1773332611476-6ec2ba68049f?w=600&auto=format&fit=crop&q=60');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+.categories .category-card.category-card[href*="train" i]:before {
+  background-image: url('https://images.unsplash.com/photo-1761250027507-c0be614c0254?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D');
+  background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06324b;
+}
+
+   .hero-copy { transition: opacity .3s ease, transform .3s ease; }
+   .hero-copy-out { opacity: 0; transform: translateY(8px); }
+
+.hero .hero-grid { grid-template-columns: 1fr; }
+
+[data-page="services"] .page-hero::before,
+[data-page="blue-minutes"] .page-hero::before,
+[data-page="stories"] .page-hero::before,
+[data-page="submit"] .page-hero::before {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+}
+[data-page="services"] .page-hero::before {
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1496196614460-48988a57fccf?w=1920&auto=format&fit=crop&q=70') !important;
+}
+[data-page="blue-minutes"] .page-hero::before {
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1580133747109-c00e1924072d?w=1920&auto=format&fit=crop&q=70') !important;
+}
+[data-page="stories"] .page-hero::before {
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1583131455094-37bdbd8d0ec6?w=1920&auto=format&fit=crop&q=70') !important;
+}
+[data-page="submit"] .page-hero::before {
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1580133747829-669f59cdda83?w=1920&auto=format&fit=crop&q=70') !important;
+}
+[data-page="services"] .page-hero .wrap,
+[data-page="blue-minutes"] .page-hero .wrap,
+[data-page="stories"] .page-hero .wrap,
+[data-page="submit"] .page-hero .wrap {
+  position: relative;
+  z-index: 1;
+}
+[data-page="services"] .page-hero h1,
+[data-page="blue-minutes"] .page-hero h1,
+[data-page="stories"] .page-hero h1,
+[data-page="submit"] .page-hero h1,
+[data-page="services"] .page-hero p,
+[data-page="blue-minutes"] .page-hero p,
+[data-page="stories"] .page-hero p,
+[data-page="submit"] .page-hero p {
+  color: #fff;
+}
+
+.nav-links a.btn,
+.nav-links a.btn[aria-current="page"] {
+  color: #fff !important;
+  text-decoration: none;
+  box-shadow: none;
+}
+.nav-links a.btn[aria-current="page"] {
+  background: #065f86;
+}
+
+/* Contact HOB nav button: keep text white, darker blue when active */
+.nav-links a.btn,
+.nav-links a.btn[aria-current="page"] {
+  color: #fff !important;
+  text-decoration: none;
+  box-shadow: none;
+}
+.nav-links a.btn[aria-current="page"] {
+  background: #065f86;
+}
+
+/* Contact page banner picture */
+[data-page="contact"] .page-hero::before {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+  background-image: linear-gradient(rgba(8,30,50,.55), rgba(8,30,50,.55)), url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&auto=format&fit=crop&q=70') !important;
+}
+[data-page="contact"] .page-hero .wrap {
+  position: relative;
+  z-index: 1;
+}
+/* ===== HERO REFRESH ===== */
+
+/* 3. Shorter hero, single column (glass card removed) */
+.hero {
+  padding: clamp(40px, 6vw, 68px) 0 clamp(60px, 8vw, 84px) !important;
+  min-height: 0 !important;
+}
+.hero .hero-grid { grid-template-columns: 1fr !important; }
+.hero .hero-grid > div { max-width: 720px; }
+
+/* 1 + 6. Readable text over any photo */
+.hero-slides::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6,28,45,.86) 0%, rgba(6,28,45,.55) 55%, rgba(6,28,45,.25) 100%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: clamp(1.85rem, 4vw + .8rem, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
+}
+.hero p:not(.hero-note) {
+  font-size: clamp(1rem, .8vw + .85rem, 1.2rem);
+  line-height: 1.55;
+  text-shadow: 0 1px 10px rgba(0,0,0,.35);
+}
+.hero .eyebrow {
+  color: #8fe3ee;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.hero .hero-note {
+  font-size: .9rem;
+  color: rgba(255,255,255,.88);
+}
+
+/* search bar */
+.hero .searchbar { display: flex; gap: 8px; }
+.hero .searchbar input { flex: 1; min-width: 0; font-size: 16px; }
+
+/* 7. Quick category links */
+.quick-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 6px; }
+.quick-links span { font-size: .85rem; color: rgba(255,255,255,.8); margin-right: 2px; }
+.quick-links a {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  color: #fff;
+  font-size: .88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s;
+}
+.quick-links a:hover,
+.quick-links a:focus-visible { background: rgba(255,255,255,.26); }
+
+/* 8. Trust line */
+.hero-trust { margin-top: 14px; font-size: .88rem; font-weight: 500; color: #bfeff5; }
+
+/* 9. Bigger tap targets + pause button */
+.hero-dots { align-items: center; gap: 10px; bottom: 16px; }
+.hero-dot { position: relative; }
+.hero-dot::after { content: ""; position: absolute; inset: -10px -5px; }
+.hero-pause {
+  width: 26px; height: 26px;
+  margin-left: 6px;
+  border: 0; border-radius: 50%;
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  font-size: 10px; line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.hero-pause:hover,
+.hero-pause:focus-visible { background: rgba(255,255,255,.4); }
+
+/* Logo sizing is set at the top of this file (.brand-logo) */
+
+/* phones */
+@media (max-width: 600px) {
+  .hero { padding: 28px 0 64px !important; }
+  .hero .eyebrow { font-size: .72rem; margin-bottom: 10px; }
+  .hero h1 { font-size: 1.8rem; margin-bottom: 12px; }
+  .hero p:not(.hero-note) { font-size: .98rem; margin-bottom: 18px; }
+  .hero .searchbar { padding: 6px; border-radius: 14px; }
+  .hero .searchbar .btn { padding: 10px 16px; font-size: .9rem; }
+  .quick-links a { padding: 6px 12px; font-size: .82rem; }
+  .hero .hero-note { font-size: .8rem; margin-top: 10px; }
+}
+
+/* very small phones: hide the word 'Opportunities' next to the logo so the menu button fits */
+@media (max-width: 480px) {
+  .site-header .brand > span { display: none; }
+}
+
+/* spam trap field: invisible to people */
+.hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* newsletter heading was dark-on-dark in the footer */
+.newsletter-signup h2,
+.site-footer .newsletter-signup h2 { color: #fff; }
+
+/* ===== Logo words as live text next to the swirl (no extra image files) ===== */
+.brand > .brand-words { display: flex; flex-direction: column; gap: 5px; padding-left: 0; border-left: 0; line-height: 1; font-size: inherit; }
+.brand-words b { font-size: 19px; font-weight: 700; letter-spacing: .02em; color: #0b2a6b; }
+.brand-words b i { font-style: normal; color: #0a84d6; }
+.brand-words small { font-size: 8.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #0b2a6b; }
+.site-footer .brand-words b { color: #fff; }
+.site-footer .brand-words b i { color: #6dcdf7; }
+.site-footer .brand-words small { color: #cde4f2; }
+@media (max-width: 480px) {
+  .brand-words b { font-size: 16px; }
+  .site-header .brand-words small { display: none; }
+}
