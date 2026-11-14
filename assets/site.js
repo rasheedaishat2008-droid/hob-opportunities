@@ -680,8 +680,8 @@
     const link = $('.site-header a[href="/"]');
     if (!link) return;
     link.className = 'brand';
-    link.setAttribute('aria-label', 'Hands on Blue Ocean Conservation Trust, home');
-    link.innerHTML = '<img class="brand-logo" src="/assets/hob-logo-emblem.png?v=20261102-logo1" alt=""><span class="brand-words"><b>HANDS ON <i>BLUE</i></b><small>Ocean Conservation Trust</small></span>';
+    link.setAttribute('aria-label', 'HOB Opportunities, home');
+    link.innerHTML = '<img class="brand-logo" src="/assets/hob-opportunities-logo.png?v=20261113-logo" alt="HOB Opportunities by Hands on Blue">';
   }
 
   function setupNav() {
@@ -722,8 +722,7 @@
         <div class="footer-grid">
           <div>
             <a class="brand footer-brand" href="/">
-              <img class="brand-logo" src="/assets/hob-logo-emblem.png?v=20261102-logo1" alt="">
-              <span class="brand-words"><b>HANDS ON <i>BLUE</i></b><small>Ocean Conservation Trust</small></span>
+              <img class="brand-logo" src="/assets/hob-opportunities-logo-light.png?v=20261113-logo" alt="HOB Opportunities by Hands on Blue">
             </a>
             <p>Discover opportunities for growth, connected to a healthier blue world.</p>
           </div>
