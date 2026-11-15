@@ -573,3 +573,16 @@
   .brand-words b { font-size: 16px; }
   .site-header .brand-words small { display: none; }
 }
+
+/* New logo shows from the very first paint, so the old logo never flashes before the script runs */
+.site-header .nav > a[href="/"]:not(.brand--ready) > * { display: none; }
+.site-header .nav > a[href="/"]:not(.brand--ready)::before {
+  content: "";
+  display: block;
+  height: 56px;
+  width: 120px;
+  background: url('/assets/hob-opportunities-logo.png?v=20261113-logo') center / contain no-repeat;
+}
+@media (max-width: 680px) {
+  .site-header .nav > a[href="/"]:not(.brand--ready)::before { height: 38px; width: 82px; }
+}

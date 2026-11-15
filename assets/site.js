@@ -679,7 +679,7 @@
   function setupBrand() {
     const link = $('.site-header a[href="/"]');
     if (!link) return;
-    link.className = 'brand';
+    link.className = 'brand brand--ready';
     link.setAttribute('aria-label', 'HOB Opportunities, home');
     link.innerHTML = '<img class="brand-logo" src="/assets/hob-opportunities-logo.png?v=20261113-logo" alt="HOB Opportunities by Hands on Blue">';
   }
