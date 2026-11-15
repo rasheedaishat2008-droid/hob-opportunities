@@ -267,6 +267,46 @@
     return sourceParts.some((s) => g === s || g.includes(s));
   }
 
+  // ---- Deadlines: closing-soon / closed labels and newest-first sorting ----
+  const MONTHS = { jan:0, january:0, feb:1, february:1, mar:2, march:2, apr:3, april:3, may:4, jun:5, june:5, jul:6, july:6, aug:7, august:7, sep:8, sept:8, september:8, oct:9, october:9, nov:10, november:10, dec:11, december:11 };
+
+  function deadlineDate(text) {
+    const s = String(text || '');
+    const found = [];
+    let m;
+    const iso = /\b(20\d{2})-(\d{2})-(\d{2})\b/g;
+    while ((m = iso.exec(s))) found.push(new Date(+m[1], +m[2] - 1, +m[3]));
+    const dmy = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([A-Za-z]{3,9})\.?,?\s+(20\d{2})\b/g;
+    while ((m = dmy.exec(s))) { const mo = MONTHS[m[2].toLowerCase()]; if (mo != null) found.push(new Date(+m[3], mo, +m[1])); }
+    const mdy = /\b([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/g;
+    while ((m = mdy.exec(s))) { const mo = MONTHS[m[1].toLowerCase()]; if (mo != null) found.push(new Date(+m[3], mo, +m[2])); }
+    if (!found.length) return null;
+    return new Date(Math.max(...found.map((d) => d.getTime())));   // the latest date mentioned is the deadline
+  }
+
+  function deadlineStatus(r) {
+    const d = deadlineDate(field(r, API_FIELDS.deadline));
+    if (!d) return { state: 'unknown', days: null };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = Math.round((d - today) / 86400000);
+    return { state: days < 0 ? 'closed' : days <= 14 ? 'soon' : 'open', days };
+  }
+
+  // open listings first, newest added first; closed listings last
+  function sortOpportunities(list) {
+    const rank = (r) => (deadlineStatus(r).state === 'closed' ? 1 : 0);
+    return list
+      .map((r, i) => ({ r, i }))
+      .sort((a, b) => {
+        const ra = rank(a.r), rb = rank(b.r);
+        if (ra !== rb) return ra - rb;
+        const da = field(a.r, API_FIELDS.added), db = field(b.r, API_FIELDS.added);
+        if (da !== db) return da < db ? 1 : -1;
+        return a.i - b.i;
+      })
+      .map((x) => x.r);
+  }
+
   function card(r) {
     const id = recordId(r);
     const saved = savedIds().includes(id);
@@ -275,12 +315,15 @@
     const desc = cleanListingText(field(r, API_FIELDS.caption)) || 'Open the listing to review eligibility and official application information.';
     const org = field(r, API_FIELDS.org);
     const deadline = field(r, API_FIELDS.deadline) || 'See official page';
+    const st = deadlineStatus(r);
+    const chip = st.state === 'closed' ? '<span class="status-chip closed">Closed</span>'
+      : st.state === 'soon' ? '<span class="status-chip soon">Closing soon</span>' : '';
 
-    return `<article class="op-card">
+    return `<article class="op-card${st.state === 'closed' ? ' is-closed' : ''}">
       ${scene(r, 'op-card-photo')}
       <div class="op-card-body">
         <div class="card-topline">
-          <span class="tag">${escapeHtml(cat)}</span>
+          <span class="card-tags"><span class="tag">${escapeHtml(cat)}</span>${chip}</span>
           <span class="mini-wave" aria-hidden="true">〰</span>
         </div>
         <h3><a href="${detailUrl(r)}">${escapeHtml(title)}</a></h3>
@@ -383,6 +426,7 @@
             ${summary ? `<p class="detail-summary">${escapeHtml(summary)}</p>` : ''}
             <div class="detail-chips">
               <span>◷ ${escapeHtml(deadline)}</span>
+              ${deadlineStatus(record).state === 'closed' ? '<span>⚠ Deadline may have passed — check the official page</span>' : deadlineStatus(record).state === 'soon' ? '<span>⏳ Closing soon</span>' : ''}
               <span>✦ HOB opportunity</span>
             </div>
             <div class="detail-hero-actions">
@@ -440,10 +484,11 @@
       const latest = all.map((r) => field(r, API_FIELDS.added)).filter(Boolean).sort().pop();
       const d = latest ? new Date(latest) : null;
       const when = d && !isNaN(d) ? ` · latest added ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
-      trust.textContent = `✓ ${all.length} verified opportunities${when}`;
+      const openCount = all.filter((r) => deadlineStatus(r).state !== 'closed').length;
+      trust.textContent = `✓ ${openCount} verified opportunities${when}`;
     }
 
-    draw($('#featuredCards'), all.slice(0, 6), 'New verified opportunities will appear here.');
+    draw($('#featuredCards'), all.filter((r) => deadlineStatus(r).state !== 'closed').slice(0, 6), 'New verified opportunities will appear here.');
     draw($('#directoryCards'), filteredOpportunities(), 'No opportunities match those filters.');
     draw($('#categoryCards'), filteredOpportunities(), 'No opportunities in this category yet.');
     draw($('#savedCards'), all.filter((r) => savedIds().includes(recordId(r))), 'Save an opportunity and it will appear here.');
@@ -696,6 +741,7 @@
         <a href="/saved/">Saved</a>
         <a href="/submit/">Submit</a>
         <a class="btn small" href="/contact/">Contact HOB</a>`;
+      nav.classList.add('nav-ready');
       const active = location.pathname;
       $$('a', nav).forEach((a) => {
         if (a.getAttribute('href') === active) a.setAttribute('aria-current', 'page');
@@ -716,6 +762,7 @@
   function setupFooter() {
     const footer = $('footer.site-footer');
     if (!footer) return;
+    footer.classList.add('footer-ready');
 
     footer.innerHTML = `
       <div class="wrap">
@@ -1014,7 +1061,7 @@
 
     if ($('#featuredCards') || $('#directoryCards') || $('#categoryCards') || $('#savedCards') || $('#detailRoot')) {
       try {
-        state.opportunities = await fetchFeed('opportunities');
+        state.opportunities = sortOpportunities(await fetchFeed('opportunities'));
       } catch (e) {
         state.errors.opportunities = e.message;
       }

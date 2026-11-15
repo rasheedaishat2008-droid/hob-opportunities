@@ -458,7 +458,7 @@
 
 /* 3. Shorter hero, single column (glass card removed) */
 .hero {
-  padding: clamp(40px, 6vw, 68px) 0 clamp(60px, 8vw, 84px) !important;
+  padding: clamp(34px, 5vw, 54px) 0 clamp(56px, 6vw, 66px) !important;
   min-height: 0 !important;
 }
 .hero .hero-grid { grid-template-columns: 1fr !important; }
@@ -469,7 +469,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6,28,45,.86) 0%, rgba(6,28,45,.55) 55%, rgba(6,28,45,.25) 100%);
+  background: linear-gradient(90deg, rgba(6,28,45,.72) 0%, rgba(6,28,45,.42) 55%, rgba(6,28,45,.14) 100%);
   pointer-events: none;
 }
 .hero h1 {
@@ -585,4 +585,13 @@
 }
 @media (max-width: 680px) {
   .site-header .nav > a[href="/"]:not(.brand--ready)::before { height: 38px; width: 82px; }
+}
+
+/* Hide the old HTML menu/footer until the script has built the new ones.
+   If the script ever fails, they appear anyway after 2 seconds. */
+@keyframes hob-show { to { visibility: visible; } }
+#navLinks:not(.nav-ready),
+.site-footer:not(.footer-ready) {
+  visibility: hidden;
+  animation: hob-show 0s linear 2s forwards;
 }
