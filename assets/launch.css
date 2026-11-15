@@ -595,3 +595,4 @@
   visibility: hidden;
   animation: hob-show 0s linear 2s forwards;
 }
+.service-card .tag { display: none; }

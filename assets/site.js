@@ -593,7 +593,6 @@
           <a href="${escapeHtml(url)}" class="service-card service-card-link" target="_blank" rel="noopener noreferrer">
             ${photo}
             <div class="service-copy">
-              <span class="tag">Hands on Blue</span>
               <h2>${escapeHtml(title)}</h2>
               <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
               <span class="text-link">Learn more <span aria-hidden="true">↗</span></span>
@@ -606,7 +605,6 @@
         <article class="service-card">
           ${photo}
           <div class="service-copy">
-            <span class="tag">Hands on Blue</span>
             <h2>${escapeHtml(title)}</h2>
             <p>${escapeHtml(desc || 'Learn more about this Hands on Blue service.')}</p>
             <span class="text-link is-disabled">Link coming soon</span>
