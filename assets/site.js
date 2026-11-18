@@ -121,10 +121,11 @@
           field(r, ['Story','Success Story','Testimonial','Story Text','Content','Description','Outcome','Message','Summary','Excerpt']));
       }
       if (type === 'services') {
-        return data.filter((r) =>
-          field(r, ['Title','Service Name','Name','Service']) &&
-          (field(r, ['Description','Summary','Details','Service Description','Content']) || field(r, ['URL','Link','Service URL','Website'])));
-      }
+  return data.filter((r) =>
+    field(r, ['Title','Service Name','Name','Service']) &&
+    (field(r, ['Description','Summary','Details','Service Description','Content']) ||
+     field(r, ['URL','Link','Service URL','Website','Booking Link'])));
+}
       throw new Error(`Unsupported feed type: ${type}`);
     }
     return data;
@@ -584,7 +585,7 @@
     target.innerHTML = state.services.map((r) => {
       const title = serviceTitle(r);
       const desc = field(r, ['Description', 'Summary', 'Details', 'Service Description', 'Content']);
-      const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website']));
+      const url = safeUrl(field(r, ['URL', 'Link', 'Service URL', 'Website', 'Booking Link']));
       const photo = scene(r, 'service-photo');
 
       // Whole card becomes clickable if a URL exists
